@@ -96,6 +96,7 @@ resource "aws_iam_policy" "deductive_policy" {
       {
         Effect = "Allow",
         Action = [
+          "ec2:RebootInstances",
           "ec2:RunInstances",
         ],
         Resource = [
