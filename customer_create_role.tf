@@ -361,7 +361,9 @@ resource "aws_iam_policy" "secret_access_policy" {
         Effect = "Allow"
         Action = [
           "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret"
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:CreateSecret",
+          "secretsmanager:PutSecretValue"
         ]
         Resource = aws_secretsmanager_secret.deductive_secrets.arn
         Condition = {
