@@ -350,9 +350,44 @@ resource "aws_secretsmanager_secret" "deductive_secrets" {
 }
 
 # Add necessary IAM policy to allow EKS pods to access the secret
-resource "aws_iam_policy" "secret_access_policy" {
-  name        = "DeductiveAISecretsAccessPolicy"
+resource "aws_iam_policy" "secret_reader_policy" {
+  name        = "DeductiveAISecretsReaderPolicy"
   description = "Policy to allow access to DeductiveAISecrets"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret",
+        ]
+        Resource = aws_secretsmanager_secret.deductive_secrets.arn
+        Condition = {
+          StringEquals = {
+            "aws:ResourceTag/creator" : "deductive-ai"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    creator = "deductive-ai"
+  }
+}
+
+# Attach the policy to the existing DeductiveRole
+resource "aws_iam_role_policy_attachment" "secret_reader_policy_attachment" {
+  role       = aws_iam_role.deductive_role.name
+  policy_arn = aws_iam_policy.secret_reader_policy.arn
+}
+
+# create writer-reader policy
+resource "aws_iam_policy" "secret_writer_reader_policy" {
+  name        = "DeductiveAISecretsWriterReaderPolicy"
+  description = "Policy to allow read and writer secrets to DeductiveAISecrets"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -380,10 +415,9 @@ resource "aws_iam_policy" "secret_access_policy" {
   }
 }
 
-# Attach the policy to the existing DeductiveRole
-resource "aws_iam_role_policy_attachment" "secret_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "secret_writer_reader_policy_attachment" {
   role       = aws_iam_role.deductive_role.name
-  policy_arn = aws_iam_policy.secret_access_policy.arn
+  policy_arn = aws_iam_policy.secret_writer_reader_policy.arn
 }
 
 output "deductive_role_arn" {
@@ -396,7 +430,7 @@ output "deductive_ai_secrets_arn" {
   value       = aws_secretsmanager_secret.deductive_secrets.arn
 }
 
-output "secret_access_policy_arn" {
+output "secret_reader_policy_arn" {
   description = "The ARN of the secrets access policy"
-  value       = aws_iam_policy.secret_access_policy.arn
+  value       = aws_iam_policy.secret_reader_policy.arn
 }
