@@ -309,6 +309,23 @@ resource "aws_iam_policy" "deductive_policy" {
             "aws:ResourceTag/creator" : "deductive-ai"
           }
         }
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "iam:ListOpenIDConnectProviders"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "iam:CreateOpenIDConnectProvider",
+          "iam:GetOpenIDConnectProvider",
+          "iam:DeleteOpenIDConnectProvider",
+          "iam:TagOpenIDConnectProvider",
+        ],
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/oidc.eks.*.amazonaws.com/id/*"
       }
     ]
   })
@@ -419,6 +436,7 @@ resource "aws_iam_role_policy_attachment" "secret_writer_reader_policy_attachmen
   role       = aws_iam_role.deductive_role.name
   policy_arn = aws_iam_policy.secret_writer_reader_policy.arn
 }
+
 
 output "deductive_role_arn" {
   description = "The ARN of the Deductive role"
