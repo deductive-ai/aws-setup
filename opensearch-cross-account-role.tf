@@ -85,4 +85,4 @@ output "role_arn" {
 output "policy_arn" {
   description = "ARN of the created policy"
   value       = aws_iam_policy.opensearch_access.arn
-} 
+}
