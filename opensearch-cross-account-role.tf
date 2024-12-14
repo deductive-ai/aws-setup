@@ -21,7 +21,6 @@ variable "opensearch_aws_region" {
 variable "trusted_account_id" {
   description = "AWS Account ID that contains the role"
   type        = string
-  default     = "736513380311"
 }
 variable "trusted_cross_account_role_name" {
   description = "Name of the role in the trusted account that needs access"
