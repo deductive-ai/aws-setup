@@ -28,7 +28,7 @@ data "aws_caller_identity" "current" {}
 # Create a new IAM role
 resource "aws_iam_role" "opensearch_cross_account" {
   name = "DeductiveAIOpenSearchCrossAccountRole"
-  
+
   # Allow the specified role to assume this role
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -38,7 +38,7 @@ resource "aws_iam_role" "opensearch_cross_account" {
         Principal = {
           AWS = "arn:aws:iam::${var.trusted_account_id}:role/${var.trusted_cross_account_role_name}"
         }
-        Action = "sts:AssumeRole"
+        Action    = "sts:AssumeRole"
         Condition = {}
       }
     ]
