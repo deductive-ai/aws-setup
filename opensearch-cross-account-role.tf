@@ -25,6 +25,7 @@ variable "trusted_account_id" {
 variable "trusted_cross_account_role_name" {
   description = "Name of the role in the trusted account that needs access"
   type        = string
+  default     = "*DeductiveAIEC2Role*"
 }
 #################################################
 # Data Sources
