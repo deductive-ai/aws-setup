@@ -10,6 +10,38 @@
 # The purpose of this module is to create a role for DeductiveAI in Customer's
 # AWS account. This role can then be assumed by DeductiveAI to deploy services
 # necessary for its operations in the Customer's AWS account.
+#
+# This Terraform module creates the following resources:
+# 1. DeductiveAssumeRole - The main role that DeductiveAI assumes to manage resources
+#    - Permissions: EC2, EKS, IAM, ACM, S3, Secrets Manager, and other AWS services
+#    - Purpose: Allows DeductiveAI to provision and manage the infrastructure
+#
+# 2. EKSClusterRole - Role for EKS cluster with permissions to manage EKS services
+#    - Permissions: AmazonEKSClusterPolicy, AmazonEKSServicePolicy
+#    - Purpose: Allows the EKS control plane to manage AWS resources on behalf of the cluster
+#
+# 3. EC2Role - Role for EC2 instances that run as worker nodes in the EKS cluster
+#    - Permissions: AmazonEKSWorkerNodePolicy, AmazonEKS_CNI_Policy, 
+#      AmazonEC2ContainerRegistryReadOnly, AmazonEBSCSIDriverPolicy
+#    - Purpose: Allows worker nodes to join the cluster and access required AWS services
+#
+# 4. SecretsReaderRole - Role for reading secrets from AWS Secrets Manager
+#    - Permissions: GetSecretValue, DescribeSecret, AssumeRole (EC2Role)
+#    - Purpose: Allows Kubernetes pods to read secrets from AWS Secrets Manager
+#
+# 5. SecretsWriterReaderRole - Role for reading and writing secrets to AWS Secrets Manager
+#    - Permissions: GetSecretValue, DescribeSecret, CreateSecret, PutSecretValue, UpdateSecret
+#    - Purpose: Allows Kubernetes pods to read and write secrets to AWS Secrets Manager
+#
+# Each role has specific policies attached that grant the minimum necessary permissions
+# for DeductiveAI to operate effectively while maintaining security best practices.
+#
+# The trust relationships are configured as follows:
+# - DeductiveAssumeRole: Trusted by DeductiveAI AWS account
+# - EKSClusterRole: Trusted by EKS service
+# - EC2Role: Trusted by EC2 service and SecretsReaderRole
+# - SecretsReaderRole: Initially trusted by EKS service, later updated for OIDC
+# - SecretsWriterReaderRole: Initially trusted by EKS service, later updated for OIDC
 
 provider "aws" {
   region  = var.region
