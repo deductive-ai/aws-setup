@@ -433,7 +433,7 @@ resource "aws_iam_role_policy_attachment" "ebs_csi_driver_policy_attachment" {
 
 # Create the secrets manager secret
 resource "aws_secretsmanager_secret" "deductive_secrets" {
-  name        = "${var.resource_prefix}AISecrets"
+  name        = "${var.resource_prefix}AISecrets1"
   description = "Secrets for Deductive AI application"
   tags        = local.tags
 }
