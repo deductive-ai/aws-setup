@@ -438,3 +438,209 @@ resource "aws_secretsmanager_secret" "deductive_secrets" {
   tags        = local.tags
 }
 
+# Create EKS cluster role
+resource "aws_iam_role" "eks_cluster_role" {
+  name = "${var.resource_prefix}EKSClusterRole"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+  tags = local.tags
+}
+
+# Attach EKS cluster policies using for_each
+resource "aws_iam_role_policy_attachment" "eks_cluster_policy_attachments" {
+  for_each = toset([
+    "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
+    "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+  ])
+
+  role       = aws_iam_role.eks_cluster_role.name
+  policy_arn = each.value
+}
+
+# Create EC2 role for worker nodes
+resource "aws_iam_role" "ec2_role" {
+  name = "${var.resource_prefix}EC2Role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+  tags = local.tags
+}
+
+# Attach policies to EC2 role using for_each
+resource "aws_iam_role_policy_attachment" "ec2_policy_attachments" {
+  for_each = toset([
+    "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+    "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+    "arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess",
+    "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+  ])
+
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = each.value
+}
+
+# Create metrics query policy
+resource "aws_iam_policy" "query_metrics_policy" {
+  name        = "${var.resource_prefix}QueryMetricsPolicy"
+  description = "Policy to allow querying CloudWatch metrics"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "cloudwatch:GetMetricData",
+          "cloudwatch:ListMetrics",
+          "cloudwatch:GetMetricStatistics"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+  tags = local.tags
+}
+
+# Attach metrics query policy to EC2 role
+resource "aws_iam_role_policy_attachment" "ec2_query_metrics_policy" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = aws_iam_policy.query_metrics_policy.arn
+}
+
+# Create S3 ClickHouse policy
+resource "aws_iam_policy" "s3_clickhouse_policy" {
+  name        = "${var.resource_prefix}S3ClickHousePolicy"
+  description = "Policy for ClickHouse to access S3"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket",
+          "s3:DeleteObject"
+        ]
+        Resource = [
+          "arn:aws:s3:::deductiveai-*",
+          "arn:aws:s3:::deductiveai-*/*"
+        ]
+      }
+    ]
+  })
+  tags = local.tags
+}
+
+# Create secrets reader role with placeholder trust policy
+resource "aws_iam_role" "secrets_reader_role" {
+  name = "${var.resource_prefix}SecretsReaderRole"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+  tags = local.tags
+}
+
+# Attach policies to secrets reader role using for_each
+resource "aws_iam_role_policy_attachment" "secrets_reader_policy_attachments" {
+  for_each = toset([
+    aws_iam_policy.secrets_reader_assume_ec2_policy.arn,
+    aws_iam_policy.secret_reader_policy.arn
+  ])
+
+  role       = aws_iam_role.secrets_reader_role.name
+  policy_arn = each.value
+}
+
+# Create secrets writer/reader role with placeholder trust policy
+resource "aws_iam_role" "secrets_writer_reader_role" {
+  name = "${var.resource_prefix}SecretsWriterReaderRole"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+  tags = local.tags
+}
+
+# Attach policy to secrets writer/reader role
+resource "aws_iam_role_policy_attachment" "secrets_writer_reader_policy_attachment" {
+  role       = aws_iam_role.secrets_writer_reader_role.name
+  policy_arn = aws_iam_policy.secrets_writer_reader_policy.arn
+}
+
+# Create a policy for secrets reader role to assume EC2 role
+resource "aws_iam_policy" "secrets_reader_assume_ec2_policy" {
+  name        = "${var.resource_prefix}SecretsReaderAssumeEC2Policy"
+  description = "Policy to allow SecretsReaderRole to assume EC2 instance role"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "sts:AssumeRole"
+        Resource = aws_iam_role.ec2_role.arn
+      }
+    ]
+  })
+  tags = local.tags
+}
+
+# Create a policy for secrets writer/reader
+resource "aws_iam_policy" "secrets_writer_reader_policy" {
+  name        = "${var.resource_prefix}SecretsWriterReaderPolicy"
+  description = "Policy to allow writing and reading secrets"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:CreateSecret",
+          "secretsmanager:PutSecretValue",
+          "secretsmanager:UpdateSecret"
+        ]
+        Resource = aws_secretsmanager_secret.deductive_secrets.arn
+      }
+    ]
+  })
+  tags = local.tags
+}
+

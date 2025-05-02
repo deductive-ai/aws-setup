@@ -20,3 +20,33 @@ output "secret_reader_policy_arn" {
   description = "The ARN of the secrets access policy (for EKS pods)"
   value       = aws_iam_policy.secret_reader_policy.arn
 }
+
+output "eks_cluster_role_arn" {
+  description = "The ARN of the EKS cluster role"
+  value       = aws_iam_role.eks_cluster_role.arn
+}
+
+output "ec2_role_arn" {
+  description = "The ARN of the EC2 instance role"
+  value       = aws_iam_role.ec2_role.arn
+}
+
+output "secrets_reader_role_arn" {
+  description = "The ARN of the secrets reader role"
+  value       = aws_iam_role.secrets_reader_role.arn
+}
+
+output "secrets_writer_reader_role_arn" {
+  description = "The ARN of the secrets writer reader role"
+  value       = aws_iam_role.secrets_writer_reader_role.arn
+}
+
+output "query_metrics_policy_arn" {
+  description = "The ARN of the metrics query policy"
+  value       = aws_iam_policy.query_metrics_policy.arn
+}
+
+output "s3_clickhouse_policy_arn" {
+  description = "The ARN of the S3 ClickHouse policy"
+  value       = aws_iam_policy.s3_clickhouse_policy.arn
+}
