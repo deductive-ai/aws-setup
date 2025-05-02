@@ -314,6 +314,45 @@ data "aws_iam_policy_document" "deductive_policy" {
       values   = ["deductive-ai"]
     }
   }
+
+  # Explicitly deny attaching admin policies
+  statement {
+    effect = "Deny"
+    actions = [
+      "iam:AttachRolePolicy",
+      "iam:PutRolePolicy"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "ArnLike"
+      variable = "iam:PolicyArn"
+      values = [
+        "arn:aws:iam::aws:policy/AdministratorAccess",
+        "arn:aws:iam::aws:policy/*Admin*",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*Admin*"
+      ]
+    }
+  }
+
+  # Prevent creating policies with * permissions
+  statement {
+    effect = "Deny"
+    actions = [
+      "iam:CreatePolicy",
+      "iam:CreatePolicyVersion"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "ForAnyValue:StringLike"
+      variable = "iam:PolicyDocument"
+      values = [
+        "*\"Action\":[\"*\"]",
+        "*\"Action\":\"*\"",
+        "*\"Action\":[\"iam:*\"]",
+        "*\"Action\":\"iam:*\""
+      ]
+    }
+  }
 }
 
 # Define the secrets management policy document
