@@ -217,12 +217,17 @@ data "aws_iam_policy_document" "deductive_policy" {
     actions = [
       "ec2:DisassociateAddress"
     ]
+    # The Amazon Resource Name (ARN) format for an Elastic IP (EIP) in AWS does not follow the
+    # typical resource-specific ARN format used for other resources like instances, volumes, etc.
+    # This is because EIPs do not have a direct ARN representation in the same way other EC2 resources do.
+    # Instead, permissions for actions involving EIPs, like ec2:DisassociateAddress, are generally specified
+    # with wildcards and conditions.
     resources = ["*"]
-    condition {
-      test     = "StringEquals"
-      variable = "aws:ResourceTag/creator"
-      values   = ["deductive-ai"]
-    }
+    # condition {
+    #   test     = "StringEquals"
+    #   variable = "aws:ResourceTag/creator"
+    #   values   = ["deductive-ai"]
+    # }
   }
 
   # Security group management
@@ -601,15 +606,15 @@ resource "aws_iam_role" "secrets_reader_role" {
   tags = local.tags
 }
 
-# Attach policies to secrets reader role using for_each
-resource "aws_iam_role_policy_attachment" "secrets_reader_policy_attachments" {
-  for_each = toset([
-    aws_iam_policy.secrets_reader_assume_ec2_policy.arn,
-    aws_iam_policy.secret_reader_policy.arn
-  ])
-
+# Attach policies to secrets reader role
+resource "aws_iam_role_policy_attachment" "secrets_reader_assume_ec2_policy_attachment" {
   role       = aws_iam_role.secrets_reader_role.name
-  policy_arn = each.value
+  policy_arn = aws_iam_policy.secrets_reader_assume_ec2_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "secrets_reader_policy_attachment" {
+  role       = aws_iam_role.secrets_reader_role.name
+  policy_arn = aws_iam_policy.secret_reader_policy.arn
 }
 
 # Create secrets writer/reader role with placeholder trust policy
