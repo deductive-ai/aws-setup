@@ -39,10 +39,16 @@ variable "deductive_aws_account_id" {
 }
 
 variable "external_id" {
-  description = "External ID for secure cross-account role assumption"
+  description = "External ID for secure cross-account role assumption (optional but recommended for security)"
   type        = string
+  default     = "" # Making it optional by providing a default empty value
   sensitive   = true
-  # No default - this should be a unique value provided by Deductive AI
+}
+
+variable "use_external_id" {
+  description = "Whether to use external ID for cross-account role assumption"
+  type        = bool
+  default     = false
 }
 
 locals {

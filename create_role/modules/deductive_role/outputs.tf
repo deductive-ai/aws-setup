@@ -11,11 +11,6 @@ output "deductive_role_arn" {
   value       = aws_iam_role.deductive_role.arn
 }
 
-output "deductive_ai_secrets_arn" {
-  description = "The ARN of AWS DeductiveAISecrets"
-  value       = aws_secretsmanager_secret.deductive_secrets.arn
-}
-
 output "eks_cluster_role_arn" {
   description = "The ARN of the EKS cluster role"
   value       = aws_iam_role.eks_cluster_role.arn

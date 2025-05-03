@@ -30,12 +30,14 @@ variable "aws_profile" {
 variable "deductive_aws_account_id" {
   description = "Deductive AI's AWS account ID for cross-account permissions"
   type        = string
+  default     = "590183993904"
   sensitive   = true
 }
 
 variable "external_id" {
-  description = "External ID for secure cross-account role assumption"
+  description = "External ID for secure cross-account role assumption (optional but recommended for security)"
   type        = string
+  default     = ""
   sensitive   = true
 }
 
@@ -46,6 +48,7 @@ module "deductive_role" {
   aws_profile              = var.aws_profile
   deductive_aws_account_id = var.deductive_aws_account_id
   external_id              = var.external_id
+  use_external_id          = var.external_id != "" ? true : false
 
   # Optional: Add additional tags
   # tags = {
@@ -59,10 +62,6 @@ output "deductive_role_arn" {
   value       = module.deductive_role.deductive_role_arn
 }
 
-output "deductive_ai_secrets_arn" {
-  description = "The ARN of AWS DeductiveAISecrets"
-  value       = module.deductive_role.deductive_ai_secrets_arn
-}
 # Additional role ARNs
 output "eks_cluster_role_arn" {
   description = "The ARN of the EKS cluster role"

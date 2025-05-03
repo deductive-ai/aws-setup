@@ -50,7 +50,11 @@ provider "aws" {
 
 data "aws_caller_identity" "current" {}
 
-# Define the assume role policy document with external ID
+###########################################
+# POLICY DOCUMENTS (IAM Policy Definitions)
+###########################################
+
+# Define the assume role policy document with optional external ID
 data "aws_iam_policy_document" "assume_role_policy" {
   statement {
     effect = "Allow"
@@ -59,10 +63,15 @@ data "aws_iam_policy_document" "assume_role_policy" {
       identifiers = ["arn:aws:iam::${var.deductive_aws_account_id}:root"]
     }
     actions = ["sts:AssumeRole"]
-    condition {
-      test     = "StringEquals"
-      variable = "sts:ExternalId"
-      values   = [var.external_id]
+
+    # Only include the condition if use_external_id is true and external_id is not empty
+    dynamic "condition" {
+      for_each = var.use_external_id && var.external_id != "" ? [1] : []
+      content {
+        test     = "StringEquals"
+        variable = "sts:ExternalId"
+        values   = [var.external_id]
+      }
     }
   }
 }
@@ -397,7 +406,6 @@ data "aws_iam_policy_document" "deductive_policy" {
 }
 
 # Define the secrets management policy document
-# This is just a policy document definition, not a resource in AWS
 data "aws_iam_policy_document" "secrets_management_policy" {
   statement {
     effect = "Allow"
@@ -405,9 +413,10 @@ data "aws_iam_policy_document" "secrets_management_policy" {
       "secretsmanager:GetSecretValue",
       "secretsmanager:DescribeSecret",
       "secretsmanager:CreateSecret",
-      "secretsmanager:PutSecretValue"
+      "secretsmanager:PutSecretValue",
+      "secretsmanager:UpdateSecret"
     ]
-    resources = [aws_secretsmanager_secret.deductive_secrets.arn]
+    resources = ["arn:aws:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:deductiveai-*"]
     condition {
       test     = "StringEquals"
       variable = "aws:ResourceTag/creator"
@@ -416,11 +425,14 @@ data "aws_iam_policy_document" "secrets_management_policy" {
   }
 }
 
+###########################################
+# STANDALONE IAM POLICIES
+###########################################
+
 # Create a standalone IAM policy for EKS pods to access secrets
-# This creates a reusable policy that can be attached to multiple roles
 resource "aws_iam_policy" "secret_reader_policy" {
   name        = "${var.resource_prefix}AISecretsReaderPolicy"
-  description = "Policy to allow read access to DeductiveAISecrets"
+  description = "Policy to allow read access to DeductiveAI Secrets"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -431,7 +443,7 @@ resource "aws_iam_policy" "secret_reader_policy" {
           "secretsmanager:GetSecretValue",
           "secretsmanager:DescribeSecret",
         ]
-        Resource = aws_secretsmanager_secret.deductive_secrets.arn
+        Resource = "arn:aws:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:deductiveai-*"
         Condition = {
           StringEquals = {
             "aws:ResourceTag/creator" : "deductive-ai"
@@ -443,7 +455,76 @@ resource "aws_iam_policy" "secret_reader_policy" {
   tags = local.tags
 }
 
-# Create the IAM role with inline policies
+# Create a policy for secrets writer/reader
+resource "aws_iam_policy" "secrets_writer_reader_policy" {
+  name        = "${var.resource_prefix}SecretsWriterReaderPolicy"
+  description = "Policy to allow writing and reading secrets"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:CreateSecret",
+          "secretsmanager:PutSecretValue",
+          "secretsmanager:UpdateSecret"
+        ]
+        Resource = "arn:aws:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:deductiveai-*"
+      }
+    ]
+  })
+  tags = local.tags
+}
+
+# Create a policy for S3 access
+resource "aws_iam_policy" "s3_policy" {
+  name        = "${var.resource_prefix}S3Policy"
+  description = "Policy for EC2 to access S3"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket",
+          "s3:DeleteObject"
+        ]
+        Resource = [
+          "arn:aws:s3:::deductiveai-*",
+          "arn:aws:s3:::deductiveai-*/*"
+        ]
+      }
+    ]
+  })
+  tags = local.tags
+}
+
+# Create a policy for secrets reader role to assume EC2 role
+resource "aws_iam_policy" "secrets_reader_assume_ec2_policy" {
+  name        = "${var.resource_prefix}SecretsReaderAssumeEC2Policy"
+  description = "Policy to allow SecretsReaderRole to assume EC2 instance role"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "sts:AssumeRole"
+        Resource = aws_iam_role.ec2_role.arn
+      }
+    ]
+  })
+  tags = local.tags
+}
+
+###########################################
+# IAM ROLES
+###########################################
+
+# 1. Main Deductive Role
 resource "aws_iam_role" "deductive_role" {
   name               = "${var.resource_prefix}AssumeRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
@@ -451,7 +532,6 @@ resource "aws_iam_role" "deductive_role" {
 }
 
 # Create an inline policy for Deductive operations
-# This policy is embedded directly in the deductive_role
 resource "aws_iam_role_policy" "deductive_policy" {
   name   = "${var.resource_prefix}Policy"
   role   = aws_iam_role.deductive_role.id
@@ -459,7 +539,6 @@ resource "aws_iam_role_policy" "deductive_policy" {
 }
 
 # Create an inline secrets management policy
-# This policy is embedded directly in the deductive_role
 resource "aws_iam_role_policy" "secrets_management_policy" {
   name   = "${var.resource_prefix}SecretsManagementPolicy"
   role   = aws_iam_role.deductive_role.id
@@ -472,14 +551,7 @@ resource "aws_iam_role_policy_attachment" "ebs_csi_driver_policy_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
 
-# Create the secrets manager secret
-resource "aws_secretsmanager_secret" "deductive_secrets" {
-  name        = "${var.resource_prefix}AISecrets1"
-  description = "Secrets for Deductive AI application"
-  tags        = local.tags
-}
-
-# Create EKS cluster role
+# 2. EKS Cluster Role
 resource "aws_iam_role" "eks_cluster_role" {
   name = "${var.resource_prefix}EKSClusterRole"
   assume_role_policy = jsonencode({
@@ -501,14 +573,15 @@ resource "aws_iam_role" "eks_cluster_role" {
 resource "aws_iam_role_policy_attachment" "eks_cluster_policy_attachments" {
   for_each = toset([
     "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
-    "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+    "arn:aws:iam::aws:policy/AmazonEKSServicePolicy",
+    "arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess",
   ])
 
   role       = aws_iam_role.eks_cluster_role.name
   policy_arn = each.value
 }
 
-# Create EC2 role for worker nodes
+# 3. EC2 Role for Worker Nodes
 resource "aws_iam_role" "ec2_role" {
   name = "${var.resource_prefix}EC2Role"
   assume_role_policy = jsonencode({
@@ -540,38 +613,13 @@ resource "aws_iam_role_policy_attachment" "ec2_policy_attachments" {
   policy_arn = each.value
 }
 
-# Create S3 policy
-resource "aws_iam_policy" "s3_policy" {
-  name        = "${var.resource_prefix}S3Policy"
-  description = "Policy for EC2 to access S3"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket",
-          "s3:DeleteObject"
-        ]
-        Resource = [
-          "arn:aws:s3:::deductiveai-*",
-          "arn:aws:s3:::deductiveai-*/*"
-        ]
-      }
-    ]
-  })
-  tags = local.tags
-}
-
 # Attach S3 policy to EC2 role
 resource "aws_iam_role_policy_attachment" "ec2_s3_policy_attachment" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = aws_iam_policy.s3_policy.arn
 }
 
-# Create secrets reader role with placeholder trust policy
+# 4. Secrets Reader Role
 resource "aws_iam_role" "secrets_reader_role" {
   name = "${var.resource_prefix}SecretsReaderRole"
   assume_role_policy = jsonencode({
@@ -602,7 +650,7 @@ resource "aws_iam_role_policy" "secrets_reader_inline_policy" {
           "secretsmanager:GetSecretValue",
           "secretsmanager:DescribeSecret",
         ]
-        Resource = aws_secretsmanager_secret.deductive_secrets.arn
+        Resource = "arn:aws:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:deductiveai-*"
         Condition = {
           StringEquals = {
             "aws:ResourceTag/creator" : "deductive-ai"
@@ -624,7 +672,7 @@ resource "aws_iam_role_policy_attachment" "secrets_reader_policy_attachment" {
   policy_arn = aws_iam_policy.secret_reader_policy.arn
 }
 
-# Create secrets writer/reader role with placeholder trust policy
+# 5. Secrets Writer/Reader Role
 resource "aws_iam_role" "secrets_writer_reader_role" {
   name = "${var.resource_prefix}SecretsWriterReaderRole"
   assume_role_policy = jsonencode({
@@ -646,45 +694,5 @@ resource "aws_iam_role" "secrets_writer_reader_role" {
 resource "aws_iam_role_policy_attachment" "secrets_writer_reader_policy_attachment" {
   role       = aws_iam_role.secrets_writer_reader_role.name
   policy_arn = aws_iam_policy.secrets_writer_reader_policy.arn
-}
-
-# Create a policy for secrets reader role to assume EC2 role
-resource "aws_iam_policy" "secrets_reader_assume_ec2_policy" {
-  name        = "${var.resource_prefix}SecretsReaderAssumeEC2Policy"
-  description = "Policy to allow SecretsReaderRole to assume EC2 instance role"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = "sts:AssumeRole"
-        Resource = aws_iam_role.ec2_role.arn
-      }
-    ]
-  })
-  tags = local.tags
-}
-
-# Create a policy for secrets writer/reader
-resource "aws_iam_policy" "secrets_writer_reader_policy" {
-  name        = "${var.resource_prefix}SecretsWriterReaderPolicy"
-  description = "Policy to allow writing and reading secrets"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret",
-          "secretsmanager:CreateSecret",
-          "secretsmanager:PutSecretValue",
-          "secretsmanager:UpdateSecret"
-        ]
-        Resource = aws_secretsmanager_secret.deductive_secrets.arn
-      }
-    ]
-  })
-  tags = local.tags
 }
 
