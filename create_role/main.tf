@@ -27,14 +27,25 @@ variable "aws_profile" {
   default     = "default"
 }
 
+variable "deductive_aws_account_id" {
+  description = "Deductive AI's AWS account ID for cross-account permissions"
+  type        = string
+  sensitive   = true
+}
+
+variable "external_id" {
+  description = "External ID for secure cross-account role assumption"
+  type        = string
+  sensitive   = true
+}
+
 module "deductive_role" {
   source = "./modules/deductive_role"
 
-  region      = var.region
-  aws_profile = var.aws_profile
-
-  # Optional: Customize resource names
-  # resource_prefix = "CustomDeductive"
+  region                   = var.region
+  aws_profile              = var.aws_profile
+  deductive_aws_account_id = var.deductive_aws_account_id
+  external_id              = var.external_id
 
   # Optional: Add additional tags
   # tags = {

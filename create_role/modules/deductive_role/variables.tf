@@ -31,10 +31,21 @@ variable "tags" {
   default     = {}
 }
 
-locals {
-  # Constants
-  deductive_aws_account_id = "590183993904"
+variable "deductive_aws_account_id" {
+  description = "Deductive AI's AWS account ID for cross-account permissions"
+  type        = string
+  default     = "590183993904"
+  sensitive   = true
+}
 
+variable "external_id" {
+  description = "External ID for secure cross-account role assumption"
+  type        = string
+  sensitive   = true
+  # No default - this should be a unique value provided by Deductive AI
+}
+
+locals {
   # Standardized tags
   default_tags = {
     creator = "deductive-ai"

@@ -50,15 +50,20 @@ provider "aws" {
 
 data "aws_caller_identity" "current" {}
 
-# Define the assume role policy document
+# Define the assume role policy document with external ID
 data "aws_iam_policy_document" "assume_role_policy" {
   statement {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${local.deductive_aws_account_id}:root"]
+      identifiers = ["arn:aws:iam::${var.deductive_aws_account_id}:root"]
     }
     actions = ["sts:AssumeRole"]
+    condition {
+      test     = "StringEquals"
+      variable = "sts:ExternalId"
+      values   = [var.external_id]
+    }
   }
 }
 
