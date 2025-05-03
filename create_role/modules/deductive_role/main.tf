@@ -403,6 +403,20 @@ data "aws_iam_policy_document" "deductive_policy" {
       ]
     }
   }
+
+  # Allow managing role policies for secrets roles
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:PutRolePolicy",
+      "iam:GetRolePolicy",
+      "iam:DeleteRolePolicy"
+    ]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resource_prefix}SecretsReaderRole",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resource_prefix}SecretsWriterReaderRole"
+    ]
+  }
 }
 
 # Define the secrets management policy document
@@ -414,7 +428,11 @@ data "aws_iam_policy_document" "secrets_management_policy" {
       "secretsmanager:DescribeSecret",
       "secretsmanager:CreateSecret",
       "secretsmanager:PutSecretValue",
-      "secretsmanager:UpdateSecret"
+      "secretsmanager:UpdateSecret",
+      "secretsmanager:TagResource",
+      "secretsmanager:UntagResource",
+      "secretsmanager:GetResourcePolicy",
+      "secretsmanager:PutResourcePolicy"
     ]
     resources = ["arn:aws:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:deductiveai-*"]
     condition {
