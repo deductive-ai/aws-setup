@@ -52,8 +52,23 @@ output "deductive_ai_secrets_arn" {
   description = "The ARN of AWS DeductiveAISecrets"
   value       = module.deductive_role.deductive_ai_secrets_arn
 }
+# Additional role ARNs
+output "eks_cluster_role_arn" {
+  description = "The ARN of the EKS cluster role"
+  value       = module.deductive_role.eks_cluster_role_arn
+}
 
-output "secret_reader_policy_arn" {
-  description = "The ARN of the secrets access policy (for EKS pods)"
-  value       = module.deductive_role.secret_reader_policy_arn
-} 
+output "ec2_role_arn" {
+  description = "The ARN of the EC2 instance role"
+  value       = module.deductive_role.ec2_role_arn
+}
+
+output "secrets_reader_role_arn" {
+  description = "The ARN of the secrets reader role"
+  value       = module.deductive_role.secrets_reader_role_arn
+}
+
+output "secrets_writer_reader_role_arn" {
+  description = "The ARN of the secrets writer reader role"
+  value       = module.deductive_role.secrets_writer_reader_role_arn
+}

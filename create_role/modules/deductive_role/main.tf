@@ -370,7 +370,6 @@ data "aws_iam_policy_document" "deductive_policy" {
       ]
     }
   }
-
   # Prevent creating policies with * permissions
   statement {
     effect = "Deny"
@@ -536,37 +535,10 @@ resource "aws_iam_role_policy_attachment" "ec2_policy_attachments" {
   policy_arn = each.value
 }
 
-# Create metrics query policy
-resource "aws_iam_policy" "query_metrics_policy" {
-  name        = "${var.resource_prefix}QueryMetricsPolicy"
-  description = "Policy to allow querying CloudWatch metrics"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "cloudwatch:GetMetricData",
-          "cloudwatch:ListMetrics",
-          "cloudwatch:GetMetricStatistics"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-  tags = local.tags
-}
-
-# Attach metrics query policy to EC2 role
-resource "aws_iam_role_policy_attachment" "ec2_query_metrics_policy" {
-  role       = aws_iam_role.ec2_role.name
-  policy_arn = aws_iam_policy.query_metrics_policy.arn
-}
-
-# Create S3 ClickHouse policy
-resource "aws_iam_policy" "s3_clickhouse_policy" {
-  name        = "${var.resource_prefix}S3ClickHousePolicy"
-  description = "Policy for ClickHouse to access S3"
+# Create S3 policy
+resource "aws_iam_policy" "s3_policy" {
+  name        = "${var.resource_prefix}S3Policy"
+  description = "Policy for EC2 to access S3"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -588,6 +560,12 @@ resource "aws_iam_policy" "s3_clickhouse_policy" {
   tags = local.tags
 }
 
+# Attach S3 policy to EC2 role
+resource "aws_iam_role_policy_attachment" "ec2_s3_policy_attachment" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = aws_iam_policy.s3_policy.arn
+}
+
 # Create secrets reader role with placeholder trust policy
 resource "aws_iam_role" "secrets_reader_role" {
   name = "${var.resource_prefix}SecretsReaderRole"
@@ -606,7 +584,31 @@ resource "aws_iam_role" "secrets_reader_role" {
   tags = local.tags
 }
 
-# Attach policies to secrets reader role
+# Create inline policy for secret reading
+resource "aws_iam_role_policy" "secrets_reader_inline_policy" {
+  name = "SecretReaderInlinePolicy"
+  role = aws_iam_role.secrets_reader_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret",
+        ]
+        Resource = aws_secretsmanager_secret.deductive_secrets.arn
+        Condition = {
+          StringEquals = {
+            "aws:ResourceTag/creator" : "deductive-ai"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# Attach policy to secrets reader role to assume EC2 role
 resource "aws_iam_role_policy_attachment" "secrets_reader_assume_ec2_policy_attachment" {
   role       = aws_iam_role.secrets_reader_role.name
   policy_arn = aws_iam_policy.secrets_reader_assume_ec2_policy.arn
