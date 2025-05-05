@@ -53,9 +53,9 @@ data "aws_iam_policy_document" "assume_role_policy" {
     }
     actions = ["sts:AssumeRole"]
 
-    # Only include the condition if use_external_id is true and external_id is not empty
+    # Only include the condition if external_id is set to avoid the confused deputy problem
     dynamic "condition" {
-      for_each = var.use_external_id && var.external_id != "" ? [1] : []
+      for_each = var.external_id != "" ? [1] : []
       content {
         test     = "StringEquals"
         variable = "sts:ExternalId"

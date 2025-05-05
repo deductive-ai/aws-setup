@@ -34,7 +34,7 @@ variable "deductive_aws_account_id" {
 }
 
 variable "external_id" {
-  description = "External ID for secure cross-account role assumption (optional but recommended for security)"
+  description = "External ID (unique) for organization or company"
   type        = string
   default     = ""
   sensitive   = true
@@ -47,7 +47,6 @@ module "deductive_role" {
   aws_profile              = var.aws_profile
   deductive_aws_account_id = var.deductive_aws_account_id
   external_id              = var.external_id
-  use_external_id          = var.external_id != "" ? true : false
 
   # Optional: Add additional tags
   # tags = {

@@ -44,12 +44,6 @@ variable "external_id" {
   sensitive   = true
 }
 
-variable "use_external_id" {
-  description = "Whether to use external ID for cross-account role assumption"
-  type        = bool
-  default     = false
-}
-
 locals {
   # Standardized tags
   default_tags = {
