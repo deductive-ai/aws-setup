@@ -121,6 +121,7 @@ data "aws_iam_policy_document" "deductive_policy" {
     effect = "Allow"
     actions = [
       "ec2:RebootInstances",
+      "ec2:RunInstances",
     ]
     resources = [
       "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:*/*",
