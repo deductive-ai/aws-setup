@@ -31,10 +31,6 @@ This configuration creates:
 
 ```bash
 terraform init
-terraform plan -var="region=<aws_region>" -var="aws_profile=<aws_profile>"
-terraform apply -var="region=<aws_region>" -var="aws_profile=<aws_profile>"
+terraform plan -var="region=<aws_region>" -var="aws_profile=<aws_profile>" -var="deductive_aws_account_id=<deductive_aws_account_id>"
+terraform apply -var="region=<aws_region>" -var="aws_profile=<aws_profile>" -var="deductive_aws_account_id=<deductive_aws_account_id>"
 ```
-
-
-
-

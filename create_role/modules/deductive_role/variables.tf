@@ -34,7 +34,6 @@ variable "tags" {
 variable "deductive_aws_account_id" {
   description = "Deductive AI's AWS account ID for cross-account permissions"
   type        = string
-  default     = "590183993904"
   sensitive   = true
 }
 
