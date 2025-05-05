@@ -402,10 +402,8 @@ data "aws_iam_policy_document" "deductive_policy" {
       "iam:DeleteRolePolicy"
     ]
     resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resource_prefix}SecretsReaderRole",
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resource_prefix}SecretsWriterReaderRole",
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/DeductiveAISecretsReaderRole",
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/DeductiveAISecretsWriterReaderRole",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resource_prefix}*SecretsReaderRole",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.resource_prefix}*SecretsWriterReaderRole",
     ]
   }
 }
