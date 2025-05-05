@@ -22,7 +22,7 @@
 #
 # 3. EC2Role - Role for EC2 instances that run as worker nodes in the EKS cluster
 #    - Permissions: AmazonEKSWorkerNodePolicy, AmazonEKS_CNI_Policy,
-#      AmazonEC2ContainerRegistryReadOnly, AmazonEBSCSIDriverPolicy
+#      AmazonEC2ContainerRegistryReadOnly, AmazonEBSCSIDriver∂Policy
 #    - Purpose: Allows worker nodes to join the cluster and access required AWS services
 #
 # Each role has specific policies attached that grant the minimum necessary permissions
@@ -31,7 +31,6 @@
 # The trust relationships are configured as follows:
 # - DeductiveAssumeRole: Trusted by DeductiveAI AWS account
 # - EKSClusterRole: Trusted by EKS service
-# - EC2Role: Trusted by EC2 service and SecretsReaderRole
 
 provider "aws" {
   region  = var.region
