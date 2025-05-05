@@ -72,13 +72,3 @@ output "ec2_role_arn" {
   description = "The ARN of the EC2 instance role"
   value       = module.deductive_role.ec2_role_arn
 }
-
-output "secrets_reader_role_arn" {
-  description = "The ARN of the secrets reader role"
-  value       = module.deductive_role.secrets_reader_role_arn
-}
-
-output "secrets_writer_reader_role_arn" {
-  description = "The ARN of the secrets writer reader role"
-  value       = module.deductive_role.secrets_writer_reader_role_arn
-}
