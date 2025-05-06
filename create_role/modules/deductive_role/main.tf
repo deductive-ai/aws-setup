@@ -148,13 +148,14 @@ data "aws_iam_policy_document" "deductive_policy" {
   }
 
   # Second statement is required: RunInstances also requires the
-  # AMI, subnets, SGs, etc. List the resource types you reference
+  # AMI, subnets, SGs, etc.
   statement {
     sid     = "RunViaAllowedTemplateReferencedResources"
     effect  = "Allow"
     actions = ["ec2:RunInstances"]
     resources = [
       "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:instance/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:spot-instances-request/*",
       "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:volume/*",
       "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:network-interface/*",
       "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:subnet/*",
