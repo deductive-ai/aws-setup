@@ -15,8 +15,13 @@
 # The script outputs the ARN for the newly created role and that needs to be
 # shared back to Deductive.
 
+provider "aws" {
+  region  = var.region
+  profile = var.aws_profile
+}
+
 variable "region" {
-  description = "The AWS region to create in"
+  description = "The AWS region to create resources in"
   type        = string
   default     = "us-east-2"
 }
@@ -27,46 +32,43 @@ variable "aws_profile" {
   default     = "default"
 }
 
-variable "deductive_aws_account_id" {
-  description = "Deductive AI's AWS account ID for cross-account permissions"
-  type        = string
-  sensitive   = true
-}
-
 variable "external_id" {
   description = "External ID (unique) for organization or company"
   type        = string
-  default     = ""
+  default     = null
+  nullable    = true
   sensitive   = true
 }
 
-module "deductive_role" {
+variable "deductive_aws_account_id" {
+  description = "Deductive AI's AWS account ID (will be provided separately by Deductive)"
+  type        = string
+  sensitive   = true
+}
+
+module "bootstrap_roles" {
   source = "./modules/deductive_role"
 
-  region                   = var.region
-  aws_profile              = var.aws_profile
+  resource_prefix        = "Deductive"  # Can be customized if needed
+  external_id            = var.external_id
   deductive_aws_account_id = var.deductive_aws_account_id
-  external_id              = var.external_id
 
-  # Optional: Add additional tags
-  # tags = {
-  #   environment = "production"
-  #   project     = "deductive-integration"
-  # }
+  # Additional tags that will be applied to all resources
+  additional_tags = {}
 }
 
 output "deductive_role_arn" {
   description = "The ARN of the Deductive role - share this with Deductive"
-  value       = module.deductive_role.deductive_role_arn
+  value       = module.bootstrap_roles.deductive_role_arn
 }
 
 # Additional role ARNs
 output "eks_cluster_role_arn" {
   description = "The ARN of the EKS cluster role"
-  value       = module.deductive_role.eks_cluster_role_arn
+  value       = module.bootstrap_roles.eks_cluster_role_arn
 }
 
 output "ec2_role_arn" {
   description = "The ARN of the EC2 instance role"
-  value       = module.deductive_role.ec2_role_arn
+  value       = module.bootstrap_roles.ec2_role_arn
 }

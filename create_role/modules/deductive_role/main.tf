@@ -32,11 +32,6 @@
 # - DeductiveAssumeRole: Trusted by DeductiveAI AWS account
 # - EKSClusterRole: Trusted by EKS service
 
-provider "aws" {
-  region  = var.region
-  profile = var.aws_profile
-}
-
 data "aws_caller_identity" "current" {}
 
 ###########################################
@@ -55,7 +50,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
 
     # Only include the condition if external_id is set to avoid the confused deputy problem
     dynamic "condition" {
-      for_each = var.external_id != "" ? [1] : []
+      for_each = var.external_id != null ? [1] : []
       content {
         test     = "StringEquals"
         variable = "sts:ExternalId"
@@ -505,7 +500,7 @@ resource "aws_iam_policy" "s3_policy" {
       }
     ]
   })
-  tags = local.tags
+  tags = local.resource_tags
 }
 
 ###########################################
@@ -516,7 +511,7 @@ resource "aws_iam_policy" "s3_policy" {
 resource "aws_iam_role" "deductive_role" {
   name               = "${var.resource_prefix}AssumeRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
-  tags               = local.tags
+  tags               = local.resource_tags
 }
 
 # Create an inline policy for Deductive operations
@@ -554,7 +549,7 @@ resource "aws_iam_role" "eks_cluster_role" {
       }
     ]
   })
-  tags = local.tags
+  tags = local.resource_tags
 }
 
 # Attach EKS cluster policies using for_each
@@ -584,7 +579,7 @@ resource "aws_iam_role" "ec2_role" {
       }
     ]
   })
-  tags = local.tags
+  tags = local.resource_tags
 }
 
 # Attach policies to EC2 role using for_each
