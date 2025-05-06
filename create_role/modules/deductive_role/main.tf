@@ -120,7 +120,6 @@ data "aws_iam_policy_document" "deductive_policy" {
     effect = "Allow"
     actions = [
       "ec2:RebootInstances",
-      "ec2:RunInstances",
     ]
     resources = [
       "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:*/*",
@@ -131,6 +130,37 @@ data "aws_iam_policy_document" "deductive_policy" {
       variable = "aws:ResourceTag/creator"
       values   = ["deductive-ai"]
     }
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:RunInstances",
+    ]
+    resources = [
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:launch-template/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # Second statement is required: RunInstances also requires the
+  # AMI, subnets, SGs, etc. List the resource types you reference
+  statement {
+    sid     = "RunViaAllowedTemplateReferencedResources"
+    effect  = "Allow"
+    actions = ["ec2:RunInstances"]
+    resources = [
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:instance/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:volume/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:network-interface/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:subnet/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*",
+      "arn:aws:ec2:*::image/*",
+    ]
   }
 
   # ACM certificate management
