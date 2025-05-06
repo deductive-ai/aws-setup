@@ -53,9 +53,9 @@ data "aws_iam_policy_document" "assume_role_policy" {
     }
     actions = ["sts:AssumeRole"]
 
-    # Only include the condition if use_external_id is true and external_id is not empty
+    # Only include the condition if external_id is set to avoid the confused deputy problem
     dynamic "condition" {
-      for_each = var.use_external_id && var.external_id != "" ? [1] : []
+      for_each = var.external_id != "" ? [1] : []
       content {
         test     = "StringEquals"
         variable = "sts:ExternalId"
@@ -120,7 +120,6 @@ data "aws_iam_policy_document" "deductive_policy" {
     effect = "Allow"
     actions = [
       "ec2:RebootInstances",
-      "ec2:RunInstances",
     ]
     resources = [
       "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:*/*",
@@ -131,6 +130,53 @@ data "aws_iam_policy_document" "deductive_policy" {
       variable = "aws:ResourceTag/creator"
       values   = ["deductive-ai"]
     }
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:RunInstances",
+    ]
+    resources = [
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:launch-template/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # Perform RunInstances against the instance and spot-instances-request resources (c) syscl
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:RunInstances",
+    ]
+    resources = [
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:instance/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:spot-instances-request/*",
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # Second statement is required: RunInstances also requires the
+  # AMI, subnets, SGs, etc.
+  statement {
+    sid     = "RunViaAllowedTemplateReferencedResources"
+    effect  = "Allow"
+    actions = ["ec2:RunInstances"]
+    resources = [
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:volume/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:network-interface/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:subnet/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*",
+      "arn:aws:ec2:*::image/*",
+    ]
   }
 
   # ACM certificate management
