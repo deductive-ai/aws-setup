@@ -147,6 +147,23 @@ data "aws_iam_policy_document" "deductive_policy" {
     }
   }
 
+  # Perform RunInstances against the instance and spot-instances-request resources (c) syscl
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:RunInstances",
+    ]
+    resources = [
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:instance/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:spot-instances-request/*",
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
   # Second statement is required: RunInstances also requires the
   # AMI, subnets, SGs, etc.
   statement {
@@ -154,8 +171,6 @@ data "aws_iam_policy_document" "deductive_policy" {
     effect  = "Allow"
     actions = ["ec2:RunInstances"]
     resources = [
-      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:instance/*",
-      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:spot-instances-request/*",
       "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:volume/*",
       "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:network-interface/*",
       "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:subnet/*",
