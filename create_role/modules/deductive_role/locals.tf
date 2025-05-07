@@ -15,4 +15,7 @@ locals {
 
   # Merge default tags with provided tags
   resource_tags = merge(local.default_tags, var.additional_tags)
+  
+  # Default Deductive AWS account ID (can be overridden by var.deductive_aws_account_id)
+  deductive_aws_account_id = var.deductive_aws_account_id != null ? var.deductive_aws_account_id : "590183993904"
 } 

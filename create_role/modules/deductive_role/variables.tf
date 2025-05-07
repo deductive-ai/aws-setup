@@ -20,8 +20,10 @@ variable "additional_tags" {
 }
 
 variable "deductive_aws_account_id" {
-  description = "Deductive AI's AWS account ID for cross-account permissions (will be provided by Deductive)"
+  description = "Deductive AI's AWS account ID for cross-account permissions"
   type        = string
+  default     = null
+  nullable    = true
   sensitive   = true
 }
 

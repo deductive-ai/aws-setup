@@ -32,9 +32,11 @@ module "bootstrap_roles" {
   # Optional: customize the resource prefix (default is "Deductive")
   resource_prefix = "Deductive"
   
-  # These values will be provided by Deductive (required)
-  deductive_aws_account_id = "ACCOUNT_ID_PROVIDED_BY_DEDUCTIVE"  # Will be provided by Deductive
-  external_id              = "EXTERNAL_ID_PROVIDED_BY_DEDUCTIVE" # Will be provided by Deductive
+  # Optional: Deductive AWS account ID (defaults will use if not provided)
+  deductive_aws_account_id = "ACCOUNT_ID_PROVIDED_BY_DEDUCTIVE"  
+  
+  # Will be provided by Deductive
+  external_id = "EXTERNAL_ID_PROVIDED_BY_DEDUCTIVE" 
 
   # Optional: Add additional tags to all created resources
   additional_tags = {
@@ -73,7 +75,7 @@ output "ec2_role_arn" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | resource_prefix | Prefix to add to resource names for uniqueness | `string` | `"Deductive"` | no |
-| deductive_aws_account_id | Deductive AI's AWS account ID for cross-account permissions | `string` | n/a | yes |
+| deductive_aws_account_id | Deductive AI's AWS account ID for cross-account permissions | `string` | `********` | no |
 | external_id | External ID for secure cross-account role assumption | `string` | `null` | no |
 | additional_tags | Additional tags to apply to all resources | `map(string)` | `{}` | no |
 

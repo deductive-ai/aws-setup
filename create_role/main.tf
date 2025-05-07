@@ -41,8 +41,10 @@ variable "external_id" {
 }
 
 variable "deductive_aws_account_id" {
-  description = "Deductive AI's AWS account ID (will be provided separately by Deductive)"
+  description = "Deductive AI's AWS account ID(s)"
   type        = string
+  default     = null
+  nullable    = true
   sensitive   = true
 }
 
