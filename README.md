@@ -31,6 +31,8 @@ This configuration creates:
 
 ```bash
 terraform init
-terraform plan -var="region=<aws_region>" -var="aws_profile=<aws_profile>" -var="deductive_aws_account_id=<deductive_aws_account_id>" -var "external_id=<external_id_from_deductive_ai>"
-terraform apply -var="region=<aws_region>" -var="aws_profile=<aws_profile>" -var="deductive_aws_account_id=<deductive_aws_account_id>" -var "external_id=<external_id_from_deductive_ai>"
+terraform plan -var="region=<aws_region>" -var="aws_profile=<aws_profile>" -var="external_id=<external_id_from_deductive_ai>"
+terraform apply -var="region=<aws_region>" -var="aws_profile=<aws_profile>" -var="external_id=<external_id_from_deductive_ai>"
 ```
+
+Note: If you need to override `deductive_aws_account`, you can add `-var="deductive_aws_account_id=<custom_account_id>"` to the commands above.

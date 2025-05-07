@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
     effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${var.deductive_aws_account_id}:root"]
+      identifiers = ["arn:aws:iam::${local.deductive_aws_account_id}:root"]
     }
     actions = ["sts:AssumeRole"]
 
