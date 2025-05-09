@@ -27,7 +27,7 @@ provider "aws" {
 }
 
 module "bootstrap_roles" {
-  source = "github.com/deductive-ai/deductive-aws-setup//create_role/modules/deductive_role?ref=main"
+  source = "git::https://github.com/deductive-ai/aws-setup.git//create_role/modules/deductive_role?depth=1&ref=1.0.2"
 
   # Optional: customize the resource prefix (default is "Deductive")
   resource_prefix = "Deductive"
@@ -46,20 +46,14 @@ module "bootstrap_roles" {
   }
 }
 
-# Output the ARNs - these need to be shared with Deductive
-output "deductive_role_arn" {
-  description = "The ARN of the Deductive role"
-  value       = module.bootstrap_roles.deductive_role_arn
-}
-
-output "eks_cluster_role_arn" {
-  description = "The ARN of the EKS cluster role"
-  value       = module.bootstrap_roles.eks_cluster_role_arn
-}
-
-output "ec2_role_arn" {
-  description = "The ARN of the EC2 instance role"
-  value       = module.bootstrap_roles.ec2_role_arn
+# Output the ARNs to share with Deductive
+output "share_with_deductive" {
+  description = "The ARNs of the resources to share with Deductive"
+  value = {
+    "deductive_role_arn"   = module.bootstrap_roles.deductive_role_arn
+    "eks_cluster_role_arn" = module.bootstrap_roles.eks_cluster_role_arn
+    "ec2_role_arn"         = module.bootstrap_roles.ec2_role_arn
+  }
 }
 ```
 
@@ -92,4 +86,4 @@ output "ec2_role_arn" {
 - Uses external ID to prevent confused deputy problem
 - Has explicit deny statements for admin access
 - Implements least privilege principle with specific resource restrictions
-- Tags all resources with creator="deductive-ai" for tracking and management 
+- Tags all resources with creator="deductive-ai" for tracking and management

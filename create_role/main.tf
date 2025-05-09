@@ -59,18 +59,11 @@ module "bootstrap_roles" {
   additional_tags = {}
 }
 
-output "deductive_role_arn" {
-  description = "The ARN of the Deductive role - share this with Deductive"
-  value       = module.bootstrap_roles.deductive_role_arn
-}
-
-# Additional role ARNs
-output "eks_cluster_role_arn" {
-  description = "The ARN of the EKS cluster role"
-  value       = module.bootstrap_roles.eks_cluster_role_arn
-}
-
-output "ec2_role_arn" {
-  description = "The ARN of the EC2 instance role"
-  value       = module.bootstrap_roles.ec2_role_arn
+output "share_with_deductive" {
+  description = "The ARNs of the resources to share with Deductive"
+  value = {
+    "deductive_role_arn"   = module.bootstrap_roles.deductive_role_arn
+    "eks_cluster_role_arn" = module.bootstrap_roles.eks_cluster_role_arn
+    "ec2_role_arn"         = module.bootstrap_roles.ec2_role_arn
+  }
 }
