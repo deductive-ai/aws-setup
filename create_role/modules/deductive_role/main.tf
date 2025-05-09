@@ -50,7 +50,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
 
     # Only include the condition if external_id is set to avoid the confused deputy problem
     dynamic "condition" {
-      for_each = var.external_id != null ? [1] : []
+      for_each = var.external_id != null ? toset(["include"]) : toset([])
       content {
         test     = "StringEquals"
         variable = "sts:ExternalId"
