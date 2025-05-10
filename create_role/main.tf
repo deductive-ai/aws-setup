@@ -49,11 +49,13 @@ variable "deductive_aws_account_id" {
 }
 
 module "bootstrap_roles" {
-  source = "./modules/deductive_role"
+  source = "../modules/bootstrap"
 
-  resource_prefix        = "Deductive"  # Can be customized if needed
-  external_id            = var.external_id
-  deductive_aws_account_id = var.deductive_aws_account_id
+  role_info = {
+    resource_prefix         = "Deductive"
+    external_id             = var.external_id
+    deductive_aws_account_id = var.deductive_aws_account_id
+  }
 
   # Additional tags that will be applied to all resources
   additional_tags = {}

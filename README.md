@@ -1,29 +1,37 @@
 # Deductive AI AWS Integration
 
-This Terraform configuration creates the necessary AWS resources for integrating Deductive AI with your AWS account.
+This Terraform module repository creates the necessary AWS resources for integrating Deductive AI with your AWS account.
 
 ## Overview
 
-This configuration creates:
+The repository is organized into Terraform modules that can be easily referenced:
 
-1. An IAM role that Deductive AI can assume to manage resources in your AWS account
-2. A Secrets Manager secret for storing configuration data
-3. Necessary policies with least-privilege permissions
+```
+modules/
+  bootstrap/  # Core IAM roles and policies for Deductive AI integration
+```
 
-## Security Considerations
+## Module Usage
 
-- All resources created by Deductive AI are tagged with `creator = "deductive-ai"`
-- IAM permissions are scoped to only the resources that Deductive AI needs to manage
-- The role can only be assumed by the Deductive AI AWS account
+### As a Module Reference
 
-## Usage
+You can reference the modules directly in your own Terraform configurations:
 
-### Prerequisites
+```hcl
+module "deductive_bootstrap" {
+  source = "git::https://github.com/deductive-ai/aws-setup.git//modules/bootstrap?ref=v1.0.0"
+  
+  role_info = {
+    resource_prefix         = "Deductive"
+    external_id             = "your-external-id"              # Provided by Deductive AI
+    deductive_aws_account_id = "deductive-aws-account-number" # Provided by Deductive AI
+  }
+}
+```
 
-- Terraform version >= 1.11.4 installed
-- AWS CLI configured with appropriate credentials
+### Standalone Usage
 
-### Deployment
+You can also use the root configuration directly:
 
 1. Clone this repository
 2. Navigate to the repository directory
@@ -35,4 +43,9 @@ terraform plan -var="region=<aws_region>" -var="aws_profile=<aws_profile>" -var=
 terraform apply -var="region=<aws_region>" -var="aws_profile=<aws_profile>" -var="external_id=<external_id_from_deductive_ai>"
 ```
 
-Note: If you need to override `deductive_aws_account`, you can add `-var="deductive_aws_account_id=<custom_account_id>"` to the commands above.
+## Security Considerations
+
+- All resources created by Deductive AI are tagged with `creator = "deductive-ai"`
+- IAM permissions are scoped to only the resources that Deductive AI needs to manage
+- The role can only be assumed by the Deductive AI AWS account
+- External ID is used to prevent confused deputy problems
