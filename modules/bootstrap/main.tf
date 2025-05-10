@@ -17,7 +17,7 @@ data "aws_caller_identity" "current" {}
 locals {
   resource_prefix         = var.role_info.resource_prefix
   external_id             = var.role_info.external_id
-  deductive_aws_account_id = var.role_info.deductive_aws_account_id != null ? var.role_info.deductive_aws_account_id : "PLACEHOLDER_ACCOUNT_ID"
+  deductive_aws_account_id = var.role_info.deductive_aws_account_id != null ? var.role_info.deductive_aws_account_id : "590183993904"
 }
 
 ###########################################
