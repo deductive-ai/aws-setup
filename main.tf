@@ -22,10 +22,18 @@ module "bootstrap" {
     resource_prefix         = "Deductive"
     external_id             = var.external_id
     deductive_aws_account_id = var.deductive_aws_account_id
+    cluster_name            = var.cluster_name
   }
 
   # Additional tags that will be applied to all resources
   additional_tags = {}
+}
+
+variable "cluster_name" {
+  description = "Cluster name for the provisioned eks"
+  type        = string
+  default     = null
+  nullable    = true
 }
 
 # External ID and AWS account ID

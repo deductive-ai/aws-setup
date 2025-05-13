@@ -16,14 +16,14 @@ module "bootstrap" {
 
   role_info = {
     resource_prefix         = "Deductive"
-    external_id             = "your-external-id"              # Optional but recommended for security
+    cluster_name            = "customer-cluster-name"
+    external_id             = "<external_id_from_deductive>"              # Optional but recommended for security
     deductive_aws_account_id = "deductive-aws-account-number" # Will be provided by Deductive AI
   }
 
   # Optional additional tags for resources
   additional_tags = {
     Environment = "Production"
-    Owner       = "DevOps"
   }
 }
 ```
@@ -32,7 +32,7 @@ module "bootstrap" {
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|----------|
-| role_info | Object containing role configuration | object | See below | yes |
+| role_info | Object containing role configuration including required cluster_name field | object | See below | yes |
 | additional_tags | Additional tags to apply to all resources | map(string) | {} | no |
 
 ### role_info Object Structure
@@ -40,6 +40,7 @@ module "bootstrap" {
 ```hcl
 role_info = {
   resource_prefix         = string
+  cluster_name            = string
   external_id             = optional(string, null)
   deductive_aws_account_id = optional(string, null)
 }
@@ -51,4 +52,4 @@ role_info = {
 |------|-------------|
 | deductive_role_arn | The ARN of the Deductive role |
 | eks_cluster_role_arn | The ARN of the EKS cluster role |
-| ec2_role_arn | The ARN of the EC2 role | 
+| ec2_role_arn | The ARN of the EC2 role |
