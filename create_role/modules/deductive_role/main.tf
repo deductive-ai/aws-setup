@@ -589,7 +589,8 @@ resource "aws_iam_role_policy_attachment" "ec2_policy_attachments" {
     "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
     "arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess",
-    "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+    "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy",
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   ])
 
   role       = aws_iam_role.ec2_role.name
