@@ -1,0 +1,26 @@
+/*
+ Copyright (c) 2023, Deductive AI, Inc. All rights reserved.
+
+ This software is the confidential and proprietary information of
+ Deductive AI, Inc. You shall not disclose such confidential
+ information and shall use it only in accordance with the terms of
+ the license agreement you entered into with Deductive AI, Inc.
+*/
+
+variable "role_info" {
+  description = "Information required for role creation"
+  type = object({
+    resource_prefix         = string
+    external_id             = optional(string, null)
+    deductive_aws_account_id = optional(string, null)
+  })
+  default = {
+    resource_prefix = "Deductive"
+  }
+}
+
+variable "additional_tags" {
+  description = "Additional tags to apply to all resources"
+  type        = map(string)
+  default     = {}
+} 
