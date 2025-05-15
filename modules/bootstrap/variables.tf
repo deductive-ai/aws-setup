@@ -10,13 +10,11 @@
 variable "role_info" {
   description = "Information required for role creation"
   type = object({
-    resource_prefix         = string
+    resource_prefix         = optional(string, "Deductive")
     external_id             = optional(string, null)
     deductive_aws_account_id = optional(string, null)
   })
-  default = {
-    resource_prefix = "Deductive"
-  }
+  default = {}
 }
 
 variable "additional_tags" {
