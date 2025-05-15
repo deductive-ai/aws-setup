@@ -19,7 +19,7 @@ You can reference the modules directly in your own Terraform configurations:
 
 ```hcl
 module "deductive_bootstrap" {
-  source = "git::https://github.com/deductive-ai/aws-setup.git//modules/bootstrap?ref=v1.0.0"
+  source = "git::https://github.com/deductive-ai/aws-setup.git//modules/bootstrap?ref=v1.0.2"
   
   role_info = {
     resource_prefix         = "Deductive"
