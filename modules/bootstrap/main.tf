@@ -15,8 +15,8 @@ data "aws_caller_identity" "current" {}
 
 # Use local variables to unpack and set defaults for the role_info input
 locals {
-  resource_prefix         = var.role_info.resource_prefix
-  external_id             = var.role_info.external_id
+  resource_prefix          = var.role_info.resource_prefix
+  external_id              = var.role_info.external_id
   deductive_aws_account_id = var.role_info.deductive_aws_account_id != null ? var.role_info.deductive_aws_account_id : "590183993904"
 }
 
@@ -271,10 +271,134 @@ data "aws_iam_policy_document" "deductive_policy" {
       "ec2:AuthorizeSecurityGroupIngress",
       "ec2:AuthorizeSecurityGroupEgress"
     ]
-    resources = ["arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*"]
+    resources = [
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:vpc/vpc-*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:subnet/subnet-*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:internet-gateway/igw-*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:route-table/rtb-*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:elastic-ip/eipalloc-*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:natgateway/nat-*",
+    ]
     condition {
       test     = "StringEquals"
       variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # Security group management for EKS clusters
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:CreateTags",
+      "ec2:DeleteTags",
+    ]
+    resources = [
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*"
+    ]
+    condition {
+      test     = "StringLike"
+      variable = "aws:ResourceTag/aws:eks:cluster-name"
+      values   = ["${var.role_info.cluster_name}*"]
+    }
+  }
+
+  # Allow Karpenter to read from DeductiveAI's scaling SQS
+  statement {
+    effect = "Allow"
+    actions = [
+      "sqs:createqueue",
+      "sqs:getqueueattributes",
+    ]
+    resources = [
+      "arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:DeductiveKarpenterInterruptionQueue*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "sqs:tagqueue",
+      "sqs:getqueueattributes",
+      "sqs:listqueuetags",
+      "sqs:setqueueattributes",
+      "sqs:deletequeue",
+    ]
+    resources = [
+      "arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:DeductiveKarpenterInterruptionQueue*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # Create event rule for Karpenter scaling
+  statement {
+    effect = "Allow"
+    actions = [
+      "events:PutTargets",
+      "events:DescribeRule",
+      "events:ListTagsForResource",
+      "events:ListTargetsByRule"
+    ]
+    resources = [
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+    ]
+  }
+
+  # Tag resource for event
+  statement {
+    effect = "Allow"
+    actions = [
+      "events:TagResource",
+    ]
+    resources = [
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # Create event rule for Karpenter scaling with tagged resources
+  statement {
+    effect = "Allow"
+    actions = [
+      # "events:CreateEventBus",
+      "events:DeleteRule",
+      "events:RemoveTargets"
+    ]
+    resources = [
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "events:PutRule", 
+    ]
+    resources = [
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/creator"
       values   = ["deductive-ai"]
     }
   }
@@ -490,7 +614,7 @@ resource "aws_iam_policy" "s3_policy" {
   tags = merge(
     var.additional_tags,
     {
-      creator     = "deductive-ai"
+      creator = "deductive-ai"
     }
   )
 }
@@ -506,7 +630,7 @@ resource "aws_iam_role" "deductive_role" {
   tags = merge(
     var.additional_tags,
     {
-      creator     = "deductive-ai"
+      creator = "deductive-ai"
     }
   )
 }
@@ -551,7 +675,7 @@ resource "aws_iam_role" "eks_cluster_role" {
   tags = merge(
     var.additional_tags,
     {
-      creator     = "deductive-ai"
+      creator = "deductive-ai"
     }
   )
 }
@@ -588,7 +712,7 @@ resource "aws_iam_role" "ec2_role" {
   tags = merge(
     var.additional_tags,
     {
-      creator     = "deductive-ai"
+      creator = "deductive-ai"
     }
   )
 }
@@ -600,7 +724,9 @@ resource "aws_iam_role_policy_attachment" "ec2_policy_attachments" {
     "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
     "arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess",
-    "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+    "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy",
+    # For Karpenter to manage spot instances https://karpenter.sh/docs/getting-started/migrating-from-cas/
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   ])
 
   role       = aws_iam_role.ec2_role.name
