@@ -265,6 +265,7 @@ data "aws_iam_policy_document" "deductive_policy" {
     effect = "Allow"
     actions = [
       "ec2:CreateTags",
+      "ec2:DeleteTags",
       "ec2:RevokeSecurityGroupIngress",
       "ec2:RevokeSecurityGroupEgress",
       "ec2:DeleteSecurityGroup",
@@ -288,21 +289,22 @@ data "aws_iam_policy_document" "deductive_policy" {
   }
 
   # Security group management for EKS clusters
-  statement {
-    effect = "Allow"
-    actions = [
-      "ec2:CreateTags",
-      "ec2:DeleteTags",
-    ]
-    resources = [
-      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*"
-    ]
-    condition {
-      test     = "StringLike"
-      variable = "aws:ResourceTag/aws:eks:cluster-name"
-      values   = ["${var.role_info.cluster_name}*"]
-    }
-  }
+  # statement {
+  #   effect = "Allow"
+  #   actions = [
+  #     "ec2:CreateTags",
+  #     "ec2:DeleteTags",
+  #   ]
+  #   resources = [
+  #     "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*"
+  #   ]
+  #   condition {
+  #     test     = "StringLike"
+  #     variable = "aws:ResourceTag/aws:eks:cluster-name"
+  #     # Right now we only have the cluster name for restriction, currently just use *
+  #     values   = ["*"]
+  #   }
+  # }
 
   # Allow Karpenter to read from DeductiveAI's scaling SQS
   statement {

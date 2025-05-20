@@ -11,7 +11,6 @@ variable "role_info" {
   description = "Information required for role creation"
   type = object({
     resource_prefix          = optional(string, "Deductive")
-    cluster_name             = optional(string, null)
     external_id              = optional(string, null)
     deductive_aws_account_id = optional(string, null)
   })
