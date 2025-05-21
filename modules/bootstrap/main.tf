@@ -15,8 +15,8 @@ data "aws_caller_identity" "current" {}
 
 # Use local variables to unpack and set defaults for the role_info input
 locals {
-  resource_prefix         = var.role_info.resource_prefix
-  external_id             = var.role_info.external_id
+  resource_prefix          = var.role_info.resource_prefix
+  external_id              = var.role_info.external_id
   deductive_aws_account_id = var.role_info.deductive_aws_account_id != null ? var.role_info.deductive_aws_account_id : "590183993904"
 }
 
@@ -265,16 +265,142 @@ data "aws_iam_policy_document" "deductive_policy" {
     effect = "Allow"
     actions = [
       "ec2:CreateTags",
+      "ec2:DeleteTags",
       "ec2:RevokeSecurityGroupIngress",
       "ec2:RevokeSecurityGroupEgress",
       "ec2:DeleteSecurityGroup",
       "ec2:AuthorizeSecurityGroupIngress",
       "ec2:AuthorizeSecurityGroupEgress"
     ]
-    resources = ["arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*"]
+    resources = [
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:vpc/vpc-*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:subnet/subnet-*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:internet-gateway/igw-*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:route-table/rtb-*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:elastic-ip/eipalloc-*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:natgateway/nat-*",
+    ]
     condition {
       test     = "StringEquals"
       variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # Security group management for EKS clusters
+  # statement {
+  #   effect = "Allow"
+  #   actions = [
+  #     "ec2:CreateTags",
+  #     "ec2:DeleteTags",
+  #   ]
+  #   resources = [
+  #     "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*"
+  #   ]
+  #   condition {
+  #     test     = "StringLike"
+  #     variable = "aws:ResourceTag/aws:eks:cluster-name"
+  #     # Right now we only have the cluster name for restriction, currently just use *
+  #     values   = ["*"]
+  #   }
+  # }
+
+  # Allow Karpenter to read from DeductiveAI's scaling SQS
+  statement {
+    effect = "Allow"
+    actions = [
+      "sqs:createqueue",
+      "sqs:getqueueattributes",
+    ]
+    resources = [
+      "arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:DeductiveKarpenterInterruptionQueue*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "sqs:tagqueue",
+      "sqs:getqueueattributes",
+      "sqs:listqueuetags",
+      "sqs:setqueueattributes",
+      "sqs:deletequeue",
+    ]
+    resources = [
+      "arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:DeductiveKarpenterInterruptionQueue*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # Create event rule for Karpenter scaling
+  statement {
+    effect = "Allow"
+    actions = [
+      "events:PutTargets",
+      "events:DescribeRule",
+      "events:ListTagsForResource",
+      "events:ListTargetsByRule"
+    ]
+    resources = [
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+    ]
+  }
+
+  # Tag resource for event
+  statement {
+    effect = "Allow"
+    actions = [
+      "events:TagResource",
+    ]
+    resources = [
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # Create event rule for Karpenter scaling with tagged resources
+  statement {
+    effect = "Allow"
+    actions = [
+      # "events:CreateEventBus",
+      "events:DeleteRule",
+      "events:RemoveTargets"
+    ]
+    resources = [
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "events:PutRule",
+    ]
+    resources = [
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/creator"
       values   = ["deductive-ai"]
     }
   }
@@ -461,41 +587,6 @@ data "aws_iam_policy_document" "secrets_management_policy" {
 }
 
 ###########################################
-# STANDALONE IAM POLICIES
-###########################################
-
-# Create a policy for S3 access
-resource "aws_iam_policy" "s3_policy" {
-  name        = "${local.resource_prefix}S3Policy"
-  description = "Policy for EC2 to access S3"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket",
-          "s3:DeleteObject"
-        ]
-        Resource = [
-          "arn:aws:s3:::deductiveai-*",
-          "arn:aws:s3:::deductiveai-*/*"
-        ]
-      }
-    ]
-  })
-
-  tags = merge(
-    var.additional_tags,
-    {
-      creator     = "deductive-ai"
-    }
-  )
-}
-
-###########################################
 # IAM ROLES AND POLICY ATTACHMENTS
 ###########################################
 
@@ -506,7 +597,7 @@ resource "aws_iam_role" "deductive_role" {
   tags = merge(
     var.additional_tags,
     {
-      creator     = "deductive-ai"
+      creator = "deductive-ai"
     }
   )
 }
@@ -551,7 +642,7 @@ resource "aws_iam_role" "eks_cluster_role" {
   tags = merge(
     var.additional_tags,
     {
-      creator     = "deductive-ai"
+      creator = "deductive-ai"
     }
   )
 }
@@ -588,7 +679,7 @@ resource "aws_iam_role" "ec2_role" {
   tags = merge(
     var.additional_tags,
     {
-      creator     = "deductive-ai"
+      creator = "deductive-ai"
     }
   )
 }
@@ -600,15 +691,112 @@ resource "aws_iam_role_policy_attachment" "ec2_policy_attachments" {
     "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
     "arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess",
-    "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+    "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy",
+    # For Karpenter to manage spot instances https://karpenter.sh/docs/getting-started/migrating-from-cas/
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   ])
 
   role       = aws_iam_role.ec2_role.name
   policy_arn = each.value
 }
 
-# Attach the S3 policy to the EC2 role
-resource "aws_iam_role_policy_attachment" "ec2_s3_policy_attachment" {
-  role       = aws_iam_role.ec2_role.name
-  policy_arn = aws_iam_policy.s3_policy.arn
-} 
+data "aws_iam_policy_document" "ec2_custom_policy_document" {
+  statement {
+    sid    = "S3Access"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      "arn:aws:s3:::deductiveai-*/*",
+      "arn:aws:s3:::deductiveai-*"
+    ]
+  }
+
+  # Essential permission for the Application Load Balancer
+  statement {
+    sid    = "DescribeLoadBalancers"
+    effect = "Allow"
+    actions = [
+      "elasticloadbalancing:DescribeLoadBalancers",
+      "elasticloadbalancing:DescribeTargetGroups",
+      "elasticloadbalancing:DescribeTags",
+      "elasticloadbalancing:DescribeTargetGroupAttributes",
+      "elasticloadbalancing:DescribeLoadBalancerAttributes",
+      "elasticloadbalancing:DescribeListeners",
+      "elasticloadbalancing:DescribeListenerAttributes",
+      "elasticloadbalancing:DescribeListenerCertificates",
+      "elasticloadbalancing:DescribeRules"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid     = "CreateALBSecurityGroup"
+    effect  = "Allow"
+    actions = ["ec2:CreateSecurityGroup", "ec2:CreateTags"]
+    resources = [
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:vpc/vpc*",
+      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*"
+    ]
+  }
+
+  statement {
+    sid    = "CreateALBTargetGroup"
+    effect = "Allow"
+    actions = [
+      "elasticloadbalancing:CreateTargetGroup",
+      "elasticloadbalancing:AddTags",
+    ]
+    resources = [
+      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:targetgroup/k8s-default-appui*/*"
+    ]
+  }
+
+  statement {
+    sid    = "CreateAppUIALB"
+    effect = "Allow"
+    actions = [
+      "elasticloadbalancing:CreateLoadBalancer",
+      "elasticloadbalancing:AddTags",
+      "elasticloadbalancing:CreateListener",
+    ]
+    resources = [
+      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:loadbalancer/app/k8s-default-appui*/*"
+    ]
+  }
+
+  statement {
+    sid    = "CreateALBListener"
+    effect = "Allow"
+    actions = [
+      "elasticloadbalancing:AddTags",
+      "elasticloadbalancing:CreateRule"
+    ]
+    resources = [
+      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:listener/app/k8s-default-appui*/*"
+    ]
+  }
+
+  statement {
+    sid    = "CreateALBListenerRule"
+    effect = "Allow"
+    actions = [
+      "elasticloadbalancing:AddTags"
+    ]
+    resources = [
+      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:listener-rule/app/k8s-default-appui*/*"
+    ]
+  }
+  # End of Application load balancer policies
+}
+
+# Attach custom policy to ec2 role
+resource "aws_iam_role_policy" "ec2_custom_policy" {
+  name   = "${local.resource_prefix}EC2CustomPolicy"
+  role   = aws_iam_role.ec2_role.id
+  policy = data.aws_iam_policy_document.ec2_custom_policy_document.json
+}

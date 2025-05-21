@@ -16,14 +16,13 @@ module "bootstrap" {
 
   role_info = {
     resource_prefix         = "Deductive"
-    external_id             = "your-external-id"              # Optional but recommended for security
+    external_id             = "<external_id_from_deductive>"              # Optional but recommended for security
     deductive_aws_account_id = "deductive-aws-account-number" # Will be provided by Deductive AI
   }
 
   # Optional additional tags for resources
   additional_tags = {
     Environment = "Production"
-    Owner       = "DevOps"
   }
 }
 ```
@@ -51,4 +50,4 @@ role_info = {
 |------|-------------|
 | deductive_role_arn | The ARN of the Deductive role |
 | eks_cluster_role_arn | The ARN of the EKS cluster role |
-| ec2_role_arn | The ARN of the EC2 role | 
+| ec2_role_arn | The ARN of the EC2 role |
