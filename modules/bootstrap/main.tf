@@ -207,6 +207,19 @@ data "aws_iam_policy_document" "deductive_policy" {
     }
   }
 
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:CreateLaunchTemplateVersion"
+    ]
+    resources = ["arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:launch-template/*"]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
   # EC2 and VPC management
   statement {
     effect = "Allow"
