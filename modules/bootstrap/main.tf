@@ -570,6 +570,8 @@ data "aws_iam_policy_document" "deductive_policy" {
     resources = [
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}*SecretsReaderRole",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}*SecretsWriterReaderRole",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}*KarpenterControllerRole*",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}*ALBControllerRole*"
     ]
   }
 }
