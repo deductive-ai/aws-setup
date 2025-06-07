@@ -19,8 +19,8 @@ module "bootstrap" {
   source = "./modules/bootstrap"
 
   role_info = {
-    resource_prefix         = "Deductive"
-    external_id             = var.external_id
+    resource_prefix          = "Deductive"
+    external_id              = var.external_id
     deductive_aws_account_id = var.deductive_aws_account_id
   }
 

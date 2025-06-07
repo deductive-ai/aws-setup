@@ -1,51 +1,35 @@
 # Deductive AI AWS Integration
 
-This Terraform module repository creates the necessary AWS resources for integrating Deductive AI with your AWS account.
+Set up AWS integration for Deductive AI in three simple steps:
 
-## Overview
-
-The repository is organized into Terraform modules that can be easily referenced:
-
+1. Clone this repository
+2. Run:
+```bash
+terraform init
+terraform plan -var="external_id=<external_id_from_deductive_ai>"
+terraform apply -var="external_id=<external_id_from_deductive_ai>"
 ```
-modules/
-  bootstrap/  # Core IAM roles and policies for Deductive AI integration
+
+3. Share the role ARNs from the output with Deductive AI
+
+Example output:
 ```
+Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
 
-## Module Usage
+Outputs:
 
-### As a Module Reference
-
-You can reference the modules directly in your own Terraform configurations:
-
-```hcl
-module "deductive_bootstrap" {
-  source = "git::https://github.com/deductive-ai/aws-setup.git//modules/bootstrap?ref=v1.0.2"
-  
-  role_info = {
-    resource_prefix         = "Deductive"
-    external_id             = "your-external-id"              # Provided by Deductive AI
-    deductive_aws_account_id = "deductive-aws-account-number" # Provided by Deductive AI
-  }
+share_with_deductive = {
+  "deductive_role_arn"   = "arn:aws:iam::123456789012:role/DeductiveAssumeRole"
+  "eks_cluster_role_arn" = "arn:aws:iam::123456789012:role/DeductiveEKSClusterRole"
+  "ec2_role_arn"         = "arn:aws:iam::123456789012:role/DeductiveEC2Role"
 }
 ```
 
-### Standalone Usage
+You'll need:
+- External ID (provided by Deductive AI)
 
-You can also use the root configuration directly:
+Optional parameters:
+- AWS region (e.g., `-var="region=us-east-1"`)
+- AWS profile (e.g., `-var="aws_profile=my-profile"`)
 
-1. Clone this repository
-2. Navigate to the repository directory
-3. Run the following commands:
 
-```bash
-terraform init
-terraform plan -var="region=<aws_region>" -var="aws_profile=<aws_profile>" -var="external_id=<external_id_from_deductive_ai>"
-terraform apply -var="region=<aws_region>" -var="aws_profile=<aws_profile>" -var="external_id=<external_id_from_deductive_ai>"
-```
-
-## Security Considerations
-
-- All resources created by Deductive AI are tagged with `creator = "deductive-ai"`
-- IAM permissions are scoped to only the resources that Deductive AI needs to manage
-- The role can only be assumed by the Deductive AI AWS account
-- External ID is used to prevent confused deputy problems
