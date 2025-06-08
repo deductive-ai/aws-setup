@@ -6,7 +6,7 @@ provider "aws" {
 variable "region" {
   description = "The AWS region to create resources in"
   type        = string
-  default     = "us-east-2"
+  default     = "us-west-1"
 }
 
 variable "aws_profile" {
@@ -19,7 +19,7 @@ module "bootstrap" {
   source = "./modules/bootstrap"
 
   role_info = {
-    resource_prefix          = "Deductive"
+    resource_prefix          = "DeductiveAI"
     external_id              = var.external_id
     deductive_aws_account_id = var.deductive_aws_account_id
   }
@@ -58,7 +58,7 @@ variable "tenant" {
 }
 
 output "share_with_deductive" {
-  description = "The ARNs of the resources to share with Deductive"
+  description = "The ARNs of the resources to share with Deductive AI"
   value = {
     "deductive_role_arn"   = module.bootstrap.deductive_role_arn
     "eks_cluster_role_arn" = module.bootstrap.eks_cluster_role_arn
