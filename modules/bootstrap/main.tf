@@ -676,7 +676,7 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy_attachments" {
 
 # Create the EC2 role for worker nodes
 resource "aws_iam_role" "ec2_role" {
-  name = "${local.resource_prefix}EC2Role"
+  name = "${local.resource_prefix}EC2Role-${var.tenant}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
