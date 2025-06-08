@@ -22,3 +22,8 @@ variable "additional_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "tenant" {
+  description = "Tenant identifier for multi-tenant deployments"
+  type        = string
+}

@@ -639,7 +639,7 @@ resource "aws_iam_role_policy_attachment" "ebs_csi_driver_policy_attachment" {
 
 # Create the EKS cluster role
 resource "aws_iam_role" "eks_cluster_role" {
-  name = "${local.resource_prefix}EKSClusterRole"
+  name = "${local.resource_prefix}EKSRole-${var.tenant}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -676,7 +676,7 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy_attachments" {
 
 # Create the EC2 role for worker nodes
 resource "aws_iam_role" "ec2_role" {
-  name = "${local.resource_prefix}EC2Role"
+  name = "${local.resource_prefix}EC2Role-${var.tenant}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
