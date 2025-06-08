@@ -24,6 +24,8 @@ module "bootstrap" {
     deductive_aws_account_id = var.deductive_aws_account_id
   }
 
+  tenant = var.tenant
+
   # Additional tags that will be applied to all resources
   additional_tags = {}
 }
@@ -43,6 +45,16 @@ variable "deductive_aws_account_id" {
   default     = null
   nullable    = true
   sensitive   = true
+}
+
+variable "tenant" {
+  description = "Tenant identifier for multi-tenant deployments"
+  type        = string
+  nullable    = false
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9][a-zA-Z0-9-_]*[a-zA-Z0-9]$", var.tenant)) || length(var.tenant) == 1
+    error_message = "Tenant must be a valid identifier (alphanumeric, hyphens, and underscores only, not starting/ending with special characters)."
+  }
 }
 
 output "share_with_deductive" {
