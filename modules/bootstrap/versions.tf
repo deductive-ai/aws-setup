@@ -7,13 +7,14 @@
  the license agreement you entered into with Deductive AI, Inc.
 */
 
+# versions.tf
 terraform {
   required_version = ">= 1.10.0"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 5.98.0"
+      version = ">= 5.0"
     }
   }
 } 
