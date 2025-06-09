@@ -21,6 +21,7 @@ Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
 Outputs:
 
 share_with_deductive = {
+  "aws_region" = "us-west-1"
   "deductive_role_arn"   = "arn:aws:iam::123456789012:role/DeductiveAIAssumeRole"
   "eks_cluster_role_arn" = "arn:aws:iam::123456789012:role/DeductiveAIEKSClusterRole"
   "ec2_role_arn"         = "arn:aws:iam::123456789012:role/DeductiveAIEC2Role-tenant"
@@ -35,3 +36,45 @@ Optional parameters:
 
 - AWS region (e.g., `-var="region=us-west-1"`)
 - AWS profile (e.g., `-var="aws_profile=my-profile"`)
+
+
+# (Optional) Sync state to S3 bucket
+Optionally, you can save terraform state to s3 bucket.
+1. explicitly defined the backend in providers.tf, otherwise you will see terraform raised warning about `-backend-config was used without a "backend" block in the configuration.`
+```hcl
+terraform {
+  backend "s3" {
+    bucket  = <bucket>
+    key     = "terraform.tfstate"
+    region  = <region>
+    encrypt = true
+  }
+}
+```
+2. Migrate the state from local to s3 (note you may need to switch workspace (via tenant) if you are under multitenant environment `terraform workspace select <tenant>`), then
+```bash
+terraform init
+```
+3. Create new workspace
+```bash
+terraform workspace new <tenant>
+4. Plan the change
+```bash
+ terraform plan -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
+```
+5. Apply if things looks sanity
+```bash
+ terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
+```
+if you see `Role with name <name> already exists`, import it:
+```bash
+TENANT=<tenant>
+AWS_PROFILE=<profile>
+AWS_REGION=<region>
+
+terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.deductive_role DeductiveAIAssumeRole
+
+terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.eks_cluster_role DeductiveAIEKSClusterRole
+
+terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.ec2_role  DeductiveAIEC2Role-${TENANT}
+```

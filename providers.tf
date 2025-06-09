@@ -6,15 +6,16 @@
  information and shall use it only in accordance with the terms of
  the license agreement you entered into with Deductive AI, Inc.
 */
-
-# versions.tf
 terraform {
-  required_version = ">= 1.12.1"
+  # backend "s3" {
+  #   bucket  = "deductive-ai-iac"
+  #   key     = "terraform.tfstate"
+  #   region  = "us-west-1"
+  #   encrypt = true
+  # }
+}
 
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.99.1"
-    }
-  }
-} 
+provider "aws" {
+  region = var.region
+  profile = var.aws_profile
+}
