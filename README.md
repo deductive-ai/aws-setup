@@ -22,7 +22,7 @@ Outputs:
 
 share_with_deductive = {
   "deductive_role_arn"   = "arn:aws:iam::123456789012:role/DeductiveAIAssumeRole"
-  "eks_cluster_role_arn" = "arn:aws:iam::123456789012:role/DeductiveAIEKSClusterRole"
+  "eks_cluster_role_arn" = "arn:aws:iam::123456789012:role/DeductiveAIEKSClusterRole-tenant"
   "ec2_role_arn"         = "arn:aws:iam::123456789012:role/DeductiveAIEC2Role-tenant"
 }
 ```
