@@ -21,6 +21,7 @@ Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
 Outputs:
 
 share_with_deductive = {
+  "aws_region" = "us-west-1"
   "deductive_role_arn"   = "arn:aws:iam::123456789012:role/DeductiveAIAssumeRole"
   "eks_cluster_role_arn" = "arn:aws:iam::123456789012:role/DeductiveAIEKSClusterRole"
   "ec2_role_arn"         = "arn:aws:iam::123456789012:role/DeductiveAIEC2Role-tenant"
