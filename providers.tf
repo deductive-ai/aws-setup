@@ -6,15 +6,16 @@
  information and shall use it only in accordance with the terms of
  the license agreement you entered into with Deductive AI, Inc.
 */
-
-module "bootstrap" {
-  source = "./modules/bootstrap"
-  tenant = var.tenant
-  role_info = {
-    resource_prefix          = "DeductiveAI"
-    external_id              = var.external_id
-    deductive_aws_account_id = var.deductive_aws_account_id
+terraform {
+  backend "s3" {
+    bucket  = "deductive-ai-iac"
+    key     = "terraform.tfstate"
+    region  = "us-west-1"
+    encrypt = true
   }
-  # Additional tags that will be applied to all resources
-  additional_tags = {}
+}
+
+provider "aws" {
+  region = var.region
+  profile = var.aws_profile
 }
