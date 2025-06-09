@@ -65,3 +65,15 @@ terraform workspace new <tenant>
 ```bash
  terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
 ```
+if you see `Role with name <name> already exists`, import it:
+```bash
+TENANT=<tenant>
+AWS_PROFILE=<profile>
+AWS_REGION=<region>
+
+terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.deductive_role DeductiveAIAssumeRole
+
+terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.eks_cluster_role DeductiveAIEKSClusterRole-${TENANT}
+
+terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.ec2_role  DeductiveAIEC2Role-${TENANT}
+```
