@@ -22,7 +22,7 @@ Outputs:
 
 share_with_deductive = {
   "deductive_role_arn"   = "arn:aws:iam::123456789012:role/DeductiveAIAssumeRole"
-  "eks_cluster_role_arn" = "arn:aws:iam::123456789012:role/DeductiveAIEKSClusterRole-tenant"
+  "eks_cluster_role_arn" = "arn:aws:iam::123456789012:role/DeductiveAIEKSClusterRole"
   "ec2_role_arn"         = "arn:aws:iam::123456789012:role/DeductiveAIEC2Role-tenant"
 }
 ```
@@ -73,7 +73,7 @@ AWS_REGION=<region>
 
 terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.deductive_role DeductiveAIAssumeRole
 
-terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.eks_cluster_role DeductiveAIEKSClusterRole-${TENANT}
+terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.eks_cluster_role DeductiveAIEKSClusterRole
 
 terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.ec2_role  DeductiveAIEC2Role-${TENANT}
 ```
