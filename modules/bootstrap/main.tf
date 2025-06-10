@@ -24,7 +24,7 @@ locals {
 
 # Create the main Deductive role
 resource "aws_iam_role" "deductive_role" {
-  name               = "${local.resource_prefix}AssumeRole"
+  name               = "DeductiveAssumeRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
   tags = merge(
     var.additional_tags,
