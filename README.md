@@ -78,3 +78,7 @@ terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="reg
 
 terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.ec2_role  DeductiveAIEC2Role-${TENANT}
 ```
+
+# Common FAQ
+If you see terraform version issue, please refer to [terraform](https://developer.hashicorp.com/terraform/install)
+for installing the latest version.
