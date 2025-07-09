@@ -70,7 +70,7 @@ data "aws_iam_policy_document" "deductive_policy" {
     resources = ["*"]
   }
 
-  # Create Deductive SSL certificate for SSO
+  # Create SSL certificate for customer subdomain ([customer].deductive.ai)
   statement {
     effect = "Allow"
     actions = [
@@ -148,7 +148,7 @@ data "aws_iam_policy_document" "deductive_policy" {
     ]
   }
 
-  # ACM certificate management
+  # ACM certificate management for [customer].deductive.ai subdomain
   statement {
     effect = "Allow"
     actions = [
@@ -166,6 +166,16 @@ data "aws_iam_policy_document" "deductive_policy" {
     }
   }
 
+  # Route53 read permissions for certificate validation (deductive.ai is managed by Deductive AI)
+  statement {
+    effect = "Allow"
+    actions = [
+      "route53:GetChange",
+      "route53:ListHostedZones"
+    ]
+    resources = ["*"]
+  }
+
   # Allow permissions to create resources for EC2 and VPC
   statement {
     effect = "Allow"
@@ -176,6 +186,7 @@ data "aws_iam_policy_document" "deductive_policy" {
       "ec2:CreateNatGateway",
       "ec2:CreateVpc",
       "ec2:CreateVpcPeeringConnection",
+      "ec2:AcceptVpcPeeringConnection",
       "ec2:CreateSecurityGroup",
       "ec2:CreateSubnet",
       "ec2:CreateRouteTable",
@@ -215,12 +226,14 @@ data "aws_iam_policy_document" "deductive_policy" {
       # Creation of Resources
       "ec2:AssociateRouteTable",
       "ec2:AttachInternetGateway",
-      "ec2:CreateKeyPair",
       "ec2:CreateNatGateway",
       "ec2:CreateRoute",
       "ec2:CreateSecurityGroup",
       "ec2:CreateSubnet",
       "ec2:CreateRouteTable",
+      # Cross-VPC connectivity for accessing customer data
+      "ec2:ModifyVpcPeeringConnectionOptions",
+      "ec2:RejectVpcPeeringConnection",
       # Required to terminate, reboot, stop and start instances
       "ec2:TerminateInstances",
       "ec2:RebootInstances",
@@ -242,6 +255,61 @@ data "aws_iam_policy_document" "deductive_policy" {
     }
   }
 
+  # Cross-VPC access for customer data and telemetry
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeVpcPeeringConnections",
+      "ec2:DescribeRouteTables",
+      "ec2:CreateRoute",
+      "ec2:ReplaceRoute",
+      "ec2:DeleteRoute"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # VPC Endpoints for secure AWS service access
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:CreateVpcEndpoint",
+      "ec2:DeleteVpcEndpoint",
+      "ec2:DescribeVpcEndpoints",
+      "ec2:ModifyVpcEndpoint",
+      "ec2:DescribeVpcEndpointServices"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # Transit Gateway for complex multi-VPC connectivity
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeTransitGateways",
+      "ec2:DescribeTransitGatewayVpcAttachments",
+      "ec2:DescribeTransitGatewayAttachments",
+      "ec2:CreateTransitGatewayVpcAttachment",
+      "ec2:DeleteTransitGatewayVpcAttachment",
+      "ec2:ModifyTransitGatewayVpcAttachment"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
   # EIP management
   statement {
     effect = "Allow"
@@ -254,11 +322,11 @@ data "aws_iam_policy_document" "deductive_policy" {
     # Instead, permissions for actions involving EIPs, like ec2:DisassociateAddress, are generally specified
     # with wildcards and conditions.
     resources = ["*"]
-    # condition {
-    #   test     = "StringEquals"
-    #   variable = "aws:ResourceTag/creator"
-    #   values   = ["deductive-ai"]
-    # }
+    condition {
+      test     = "StringEquals"
+      variable = "ec2:Region"
+      values   = ["us-west-1", "us-west-2", "us-east-1", "us-east-2"]  # Restrict to common regions
+    }
   }
 
   # Security group management
@@ -426,6 +494,130 @@ data "aws_iam_policy_document" "deductive_policy" {
     }
   }
 
+  # Auto Scaling Groups for EKS managed node groups
+  statement {
+    effect = "Allow"
+    actions = [
+      "autoscaling:CreateAutoScalingGroup",
+      "autoscaling:DeleteAutoScalingGroup",
+      "autoscaling:DescribeAutoScalingGroups",
+      "autoscaling:DescribeAutoScalingInstances",
+      "autoscaling:DescribeLaunchConfigurations",
+      "autoscaling:DescribeScalingActivities",
+      "autoscaling:UpdateAutoScalingGroup",
+      "autoscaling:CreateLaunchConfiguration",
+      "autoscaling:DeleteLaunchConfiguration",
+      "autoscaling:DescribeTags",
+      "autoscaling:CreateOrUpdateTags",
+      "autoscaling:DeleteTags",
+      "autoscaling:SetDesiredCapacity",
+      "autoscaling:TerminateInstanceInAutoScalingGroup"
+    ]
+    resources = [
+      "arn:aws:autoscaling:*:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/eks-*",
+      "arn:aws:autoscaling:*:${data.aws_caller_identity.current.account_id}:launchConfiguration:*:launchConfigurationName/eks-*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # KMS permissions for using customer-managed encryption keys
+  statement {
+    effect = "Allow"
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # ECR permissions for pulling existing container images
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "ecr:DescribeRepositories",
+      "ecr:ListImages",
+      "ecr:DescribeImages"
+    ]
+    resources = ["*"]
+  }
+
+  # Systems Manager Parameter Store for configuration management
+  statement {
+    effect = "Allow"
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:GetParametersByPath",
+      "ssm:PutParameter",
+      "ssm:DeleteParameter",
+      "ssm:DescribeParameters",
+      "ssm:AddTagsToResource",
+      "ssm:RemoveTagsFromResource",
+      "ssm:ListTagsForResource"
+    ]
+    resources = [
+      "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/deductiveai/*",
+      "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/deductive-ai/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
+  # Application Load Balancer management for app-UI
+  statement {
+    effect = "Allow"
+    actions = [
+      "elasticloadbalancing:CreateLoadBalancer",
+      "elasticloadbalancing:DeleteLoadBalancer",
+      "elasticloadbalancing:CreateTargetGroup",
+      "elasticloadbalancing:DeleteTargetGroup",
+      "elasticloadbalancing:CreateListener",
+      "elasticloadbalancing:DeleteListener",
+      "elasticloadbalancing:CreateRule",
+      "elasticloadbalancing:DeleteRule",
+      "elasticloadbalancing:ModifyLoadBalancerAttributes",
+      "elasticloadbalancing:ModifyTargetGroup",
+      "elasticloadbalancing:ModifyTargetGroupAttributes",
+      "elasticloadbalancing:ModifyListener",
+      "elasticloadbalancing:ModifyRule",
+      "elasticloadbalancing:AddTags",
+      "elasticloadbalancing:RemoveTags",
+      "elasticloadbalancing:DeregisterTargets",
+      "elasticloadbalancing:RegisterTargets"
+    ]
+    resources = [
+      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:loadbalancer/app/k8s-*/*",
+      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:loadbalancer/app/*deductive*/*",
+      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:targetgroup/k8s-*/*",
+      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:listener/app/k8s-*/*",
+      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:listener-rule/app/k8s-*/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
   # S3 bucket management
   statement {
     effect = "Allow"
@@ -436,7 +628,15 @@ data "aws_iam_policy_document" "deductive_policy" {
       "s3:Put*",
       "s3:Delete*",
     ]
-    resources = ["arn:aws:s3:::deductiveai-*"]
+    resources = [
+      "arn:aws:s3:::deductiveai-*",
+      "arn:aws:s3:::deductiveai-*/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestedRegion"
+      values   = ["us-west-1", "us-west-2", "us-east-1", "us-east-2"]  # Restrict to common regions
+    }
   }
 
   # IAM PassRole and UntagRole
@@ -523,7 +723,10 @@ data "aws_iam_policy_document" "deductive_policy" {
       values = [
         "arn:aws:iam::aws:policy/AdministratorAccess",
         "arn:aws:iam::aws:policy/*Admin*",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*Admin*"
+        "arn:aws:iam::aws:policy/PowerUserAccess",
+        "arn:aws:iam::aws:policy/*FullAccess*",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*Admin*",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/*FullAccess*"
       ]
     }
   }
@@ -589,96 +792,5 @@ data "aws_iam_policy_document" "secrets_management_policy" {
   }
 }
 
-data "aws_iam_policy_document" "ec2_custom_policy_document" {
-  statement {
-    sid    = "S3Access"
-    effect = "Allow"
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:ListBucket"
-    ]
-    resources = [
-      "arn:aws:s3:::deductiveai-*/*",
-      "arn:aws:s3:::deductiveai-*"
-    ]
-  }
-
-  # Essential permission for the Application Load Balancer
-  statement {
-    sid    = "DescribeLoadBalancers"
-    effect = "Allow"
-    actions = [
-      "elasticloadbalancing:DescribeLoadBalancers",
-      "elasticloadbalancing:DescribeTargetGroups",
-      "elasticloadbalancing:DescribeTags",
-      "elasticloadbalancing:DescribeTargetGroupAttributes",
-      "elasticloadbalancing:DescribeLoadBalancerAttributes",
-      "elasticloadbalancing:DescribeListeners",
-      "elasticloadbalancing:DescribeListenerAttributes",
-      "elasticloadbalancing:DescribeListenerCertificates",
-      "elasticloadbalancing:DescribeRules"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    sid     = "CreateALBSecurityGroup"
-    effect  = "Allow"
-    actions = ["ec2:CreateSecurityGroup", "ec2:CreateTags"]
-    resources = [
-      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:vpc/vpc*",
-      "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:security-group/*"
-    ]
-  }
-
-  statement {
-    sid    = "CreateALBTargetGroup"
-    effect = "Allow"
-    actions = [
-      "elasticloadbalancing:CreateTargetGroup",
-      "elasticloadbalancing:AddTags",
-    ]
-    resources = [
-      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:targetgroup/k8s-default-appui*/*"
-    ]
-  }
-
-  statement {
-    sid    = "CreateAppUIALB"
-    effect = "Allow"
-    actions = [
-      "elasticloadbalancing:CreateLoadBalancer",
-      "elasticloadbalancing:AddTags",
-      "elasticloadbalancing:CreateListener",
-    ]
-    resources = [
-      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:loadbalancer/app/k8s-default-appui*/*"
-    ]
-  }
-
-  statement {
-    sid    = "CreateALBListener"
-    effect = "Allow"
-    actions = [
-      "elasticloadbalancing:AddTags",
-      "elasticloadbalancing:CreateRule"
-    ]
-    resources = [
-      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:listener/app/k8s-default-appui*/*"
-    ]
-  }
-
-  statement {
-    sid    = "CreateALBListenerRule"
-    effect = "Allow"
-    actions = [
-      "elasticloadbalancing:AddTags"
-    ]
-    resources = [
-      "arn:aws:elasticloadbalancing:*:${data.aws_caller_identity.current.account_id}:listener-rule/app/k8s-default-appui*/*"
-    ]
-  }
-  # End of Application load balancer policies
-}
+# EC2 worker node roles will be created dynamically with appropriate permissions
+# The main deductive_policy above includes the necessary permissions to create and manage these roles
