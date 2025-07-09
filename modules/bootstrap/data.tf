@@ -509,6 +509,22 @@ data "aws_iam_policy_document" "deductive_policy" {
     }
   }
 
+  # Enable WAF
+  statement {
+    effect = "Allow"
+    actions = [
+      "elasticloadbalancing:ModifyLoadBalancerAttributes",
+      "wafv2:CreateWebACL",
+      "wafv2:TagResource",
+      "wafv2:GetWebACL",
+      "wafv2:ListTagsForResource",
+      "wafv2:AssociateWebACL",
+      "elasticloadbalancing:SetWebACL",
+      "wafv2:GetWebACLForResource"
+    ]
+    resources = ["*"]
+  }
+
   # Explicitly deny attaching admin policies
   statement {
     effect = "Deny"
