@@ -1,53 +1,15 @@
-# Bootstrap Module
+# AWS Bootstrap Module
 
-This module provides the core infrastructure required for Deductive AI to operate in your AWS account. It creates the necessary IAM roles with appropriate permissions for secure cross-account access.
+## Purpose
 
-## Resources Created
+This Terraform module is responsible for creating the AWS IAM resources required for the Deductive AI platform to operate. It creates a single, cross-account IAM role that the Deductive AI control plane assumes to manage resources within the customer's AWS account.
 
-- **DeductiveAssumeRole**: Main role that Deductive AI will assume to manage resources
-- **EKS Cluster Role**: Role for EKS cluster with permissions to manage EKS services
-- **EC2 Role**: Role for EC2 instances that run as worker nodes in the EKS cluster
+## Resources
+
+- **`aws_iam_role`**: The primary cross-account role for the Deductive AI service.
+- **`aws_iam_role_policy`**: An inline policy attached to the role, granting necessary permissions for service operation.
+- **`aws_iam_role_policy_attachment`**: Attaches required AWS managed policies (e.g., for the EBS CSI driver).
 
 ## Usage
 
-```hcl
-module "bootstrap" {
-  source = "git::https://github.com/deductive-ai/aws-setup.git//modules/bootstrap?ref=v1.0.0"
-
-  role_info = {
-    resource_prefix         = "Deductive"
-    external_id             = "<external_id_from_deductive>"              # Optional but recommended for security
-    deductive_aws_account_id = "deductive-aws-account-number" # Will be provided by Deductive AI
-  }
-
-  # Optional additional tags for resources
-  additional_tags = {
-    Environment = "Production"
-  }
-}
-```
-
-## Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| role_info | Object containing role configuration | object | See below | yes |
-| additional_tags | Additional tags to apply to all resources | map(string) | {} | no |
-
-### role_info Object Structure
-
-```hcl
-role_info = {
-  resource_prefix         = string
-  external_id             = optional(string, null)
-  deductive_aws_account_id = optional(string, null)
-}
-```
-
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| deductive_role_arn | The ARN of the Deductive role |
-| eks_cluster_role_arn | The ARN of the EKS cluster role |
-| ec2_role_arn | The ARN of the EC2 role |
+This module is intended for internal use by the root Terraform configuration and is not designed to be used directly. It receives all necessary inputs, such as the tenant identifier and external ID, from the root module. 

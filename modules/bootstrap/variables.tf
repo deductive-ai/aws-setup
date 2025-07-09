@@ -27,3 +27,10 @@ variable "tenant" {
   description = "Tenant identifier for multi-tenant deployments"
   type        = string
 }
+
+variable "customer_subdomain" {
+  description = "Customer subdomain for app-ui access (will be [customer_subdomain].deductive.ai)"
+  type        = string
+  default     = null
+  nullable    = true
+}

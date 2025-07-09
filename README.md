@@ -1,80 +1,52 @@
 # Deductive AI AWS Integration
 
-Set up AWS integration for Deductive AI in three simple steps:
+This Terraform configuration creates the necessary AWS IAM role for the Deductive AI platform to operate within your AWS account.
 
-1. Clone this repository
-2. Run:
+## Prerequisites
 
+- An AWS account with permissions to create IAM roles.
+- Terraform v1.0 or later installed.
+- AWS CLI installed and configured with your credentials.
+
+## Setup Instructions
+
+1.  **Clone Repository**
+    ```bash
+    git clone https://github.com/deductive-ai/aws-onboarding.git
+    cd aws-onboarding
+    ```
+
+2.  **Configure Variables**
+    Copy the example variables file.
+    ```bash
+    cp terraform.tfvars.example terraform.tfvars
+    ```
+    Edit `terraform.tfvars` with the values provided by your Deductive AI representative.
+
+3.  **Apply Terraform Configuration**
+    Initialize Terraform and apply the configuration.
+    ```bash
+    terraform init
+    terraform apply
+    ```
+
+4.  **Provide Role ARN to Deductive AI**
+    After the apply completes, the required IAM Role ARN will be displayed as an output. Provide this ARN to your Deductive AI representative to complete the integration.
+    ```bash
+    terraform output deductive_role_arn
+    ```
+
+## Resources Created
+
+This configuration creates a single cross-account IAM role. This role is scoped with a unique external ID and can only be assumed by Deductive AI's specified AWS account. The permissions granted are limited to those necessary for the operation of the Deductive AI service, which includes managing EKS clusters, EC2 instances, and related networking resources.
+
+## Support
+
+If you encounter any issues during this process, please contact your Deductive AI support representative or email support@deductive.ai.
+
+## Cleanup
+
+To remove the resources created by this configuration, run the following command:
 ```bash
-terraform init
-terraform plan -var="tenant=<tenant>" -var="external_id=<external_id_from_deductive_ai>"
-terraform apply -var="tenant=<tenant>" -var="external_id=<external_id_from_deductive_ai>"
-```
-
-3. Share the role ARNs from the output with Deductive AI
-
-Example output:
-
-```bash
-Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
-
-Outputs:
-
-share_with_deductive = {
-  "aws_region" = "us-west-1"
-  "deductive_role_arn"   = "arn:aws:iam::123456789012:role/DeductiveAssumeRole"
-  "eks_cluster_role_arn" = "arn:aws:iam::123456789012:role/DeductiveAIEKSClusterRole"
-  "ec2_role_arn"         = "arn:aws:iam::123456789012:role/DeductiveAIEC2Role-tenant"
-}
-```
-
-You'll need:
-
-- External ID (provided by Deductive AI)
-
-Optional parameters:
-
-- AWS region (e.g., `-var="region=us-west-1"`)
-- AWS profile (e.g., `-var="aws_profile=my-profile"`)
-
-
-# (Optional) Sync state to S3 bucket
-Optionally, you can save terraform state to s3 bucket.
-1. explicitly defined the backend in providers.tf, otherwise you will see terraform raised warning about `-backend-config was used without a "backend" block in the configuration.`
-```hcl
-terraform {
-  backend "s3" {
-    bucket  = <bucket>
-    key     = "terraform.tfstate"
-    region  = <region>
-    encrypt = true
-  }
-}
-```
-2. Migrate the state from local to s3 (note you may need to switch workspace (via tenant) if you are under multitenant environment `terraform workspace select <tenant>`), then
-```bash
-terraform init
-```
-3. Create new workspace
-```bash
-terraform workspace new <tenant>
-4. Plan the change
-```bash
- terraform plan -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
-```
-5. Apply if things looks sanity
-```bash
- terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
-```
-if you see `Role with name <name> already exists`, import it:
-```bash
-TENANT=<tenant>
-AWS_PROFILE=<profile>
-AWS_REGION=<region>
-
-terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.deductive_role DeductiveAssumeRole
-
-terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.eks_cluster_role DeductiveAIEKSClusterRole
-
-terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.ec2_role  DeductiveAIEC2Role-${TENANT}
-```
+terraform destroy
+``` 
