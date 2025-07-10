@@ -1,0 +1,26 @@
+name: Terraform Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ">= 1.12.0"
+
+    - uses: terraform-linters/setup-tflint@v4
+
+    - run: curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+
+    - run: pip install checkov
+
+    - run: chmod +x scripts/validate.sh && ./scripts/validate.sh 
