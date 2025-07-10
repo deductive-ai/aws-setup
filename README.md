@@ -22,9 +22,8 @@ Outputs:
 
 share_with_deductive = {
   "aws_region" = "us-west-1"
-  "deductive_role_arn"   = "arn:aws:iam::123456789012:role/DeductiveAssumeRole"
-  "eks_cluster_role_arn" = "arn:aws:iam::123456789012:role/DeductiveAIEKSClusterRole"
-  "ec2_role_arn"         = "arn:aws:iam::123456789012:role/DeductiveAIEC2Role-tenant"
+  "deductive_role_arn"   = "arn:aws:iam::123456789012:role/DeductiveAssumeRole-<tenant>"
+  "aws_setup_version"    = "<version>"
 }
 ```
 

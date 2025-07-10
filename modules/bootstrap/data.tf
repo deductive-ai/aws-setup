@@ -8,6 +8,10 @@
 */
 data "aws_caller_identity" "current" {}
 
+data "external" "git_branch" {
+  program = ["sh", "-c", "echo '{\"branch\": \"'$(git rev-parse --abbrev-ref HEAD)'\"}'"]
+}
+
 ###########################################
 # POLICY DOCUMENTS (IAM Policy Definitions)
 ###########################################

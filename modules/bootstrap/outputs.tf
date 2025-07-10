@@ -14,12 +14,7 @@ output "deductive_role_arn" {
   value       = aws_iam_role.deductive_role.arn
 }
 
-output "eks_cluster_role_arn" {
-  description = "The ARN of the EKS cluster role that allows EKS control plane to manage resources"
-  value       = aws_iam_role.eks_cluster_role.arn
+output "git_branch" {
+  description = "The current Git branch name"
+  value       = data.external.git_branch.result.branch
 }
-
-output "ec2_role_arn" {
-  description = "The ARN of the EC2 instance role for worker nodes in the EKS cluster"
-  value       = aws_iam_role.ec2_role.arn
-} 
