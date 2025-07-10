@@ -2,9 +2,9 @@ name: Terraform Validation
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
 
 jobs:
   validate:
@@ -23,4 +23,8 @@ jobs:
 
     - run: pip install checkov
 
-    - run: chmod +x scripts/validate.sh && ./scripts/validate.sh 
+    - run: chmod +x scripts/validate.sh && ./scripts/validate.sh
+      env:
+        AWS_ACCESS_KEY_ID: fake
+        AWS_SECRET_ACCESS_KEY: fake
+        AWS_DEFAULT_REGION: us-west-2 
