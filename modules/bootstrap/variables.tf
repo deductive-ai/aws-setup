@@ -26,4 +26,5 @@ variable "additional_tags" {
 variable "tenant" {
   description = "Tenant identifier for multi-tenant deployments"
   type        = string
+  default     = null
 }
