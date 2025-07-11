@@ -32,6 +32,10 @@ variable "tenant" {
   type        = string
   default     = null
   nullable    = true
+  validation {
+    condition     = var.tenant == null || can(regex("^[a-zA-Z0-9][a-zA-Z0-9-_]*[a-zA-Z0-9]$", var.tenant)) || length(var.tenant) == 1
+    error_message = "Tenant must be a valid identifier (alphanumeric, hyphens, and underscores only, not starting/ending with special characters)."
+  }
 }
 
 variable "use_local_backend" {
