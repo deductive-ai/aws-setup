@@ -8,9 +8,10 @@
 */
 data "aws_caller_identity" "current" {}
 
-data "external" "git_branch" {
-  program = ["sh", "-c", "echo '{\"branch\": \"'$(git rev-parse --abbrev-ref HEAD)'\"}'"]
+data "external" "git_version" {
+  program = ["sh", "-c", "echo '{\"version\": \"'$(git describe --tags --always --dirty)'\"}'"]
 }
+
 
 ###########################################
 # POLICY DOCUMENTS (IAM Policy Definitions)
