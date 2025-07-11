@@ -47,5 +47,3 @@ role_info = {
 | Name | Description |
 |------|-------------|
 | deductive_role_arn | The ARN of the Deductive role |
-| eks_cluster_role_arn | The ARN of the EKS cluster role |
-| ec2_role_arn | The ARN of the EC2 role |
