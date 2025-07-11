@@ -5,8 +5,6 @@ This module provides the core infrastructure required for Deductive AI to operat
 ## Resources Created
 
 - **DeductiveAssumeRole**: Main role that Deductive AI will assume to manage resources
-- **EKS Cluster Role**: Role for EKS cluster with permissions to manage EKS services
-- **EC2 Role**: Role for EC2 instances that run as worker nodes in the EKS cluster
 
 ## Usage
 
