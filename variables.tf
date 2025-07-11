@@ -28,13 +28,10 @@ variable "deductive_aws_account_id" {
 }
 
 variable "tenant" {
-  description = "Tenant identifier for multi-tenant deployments"
+  description = "Tenant identifier for multi-tenant deployments (optional)"
   type        = string
-  nullable    = false
-  validation {
-    condition     = can(regex("^[a-zA-Z0-9][a-zA-Z0-9-_]*[a-zA-Z0-9]$", var.tenant)) || length(var.tenant) == 1
-    error_message = "Tenant must be a valid identifier (alphanumeric, hyphens, and underscores only, not starting/ending with special characters)."
-  }
+  default     = null
+  nullable    = true
 }
 
 variable "use_local_backend" {
