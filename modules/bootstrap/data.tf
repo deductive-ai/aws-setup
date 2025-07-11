@@ -8,6 +8,11 @@
 */
 data "aws_caller_identity" "current" {}
 
+data "external" "git_version" {
+  program = ["sh", "-c", "echo '{\"version\": \"'$(git describe --tags --always --dirty)'\"}'"]
+}
+
+
 ###########################################
 # POLICY DOCUMENTS (IAM Policy Definitions)
 ###########################################

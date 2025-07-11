@@ -1,84 +1,54 @@
 # Deductive AI AWS Integration
 
-Set up AWS integration for Deductive AI in three simple steps:
+This repository contains Terraform configurations to set up AWS integration for Deductive AI.
 
-1. Clone this repository
-2. Run:
+## Prerequisites
 
-```bash
-terraform init
-terraform plan -var="tenant=<tenant>" -var="external_id=<external_id_from_deductive_ai>"
-terraform apply -var="tenant=<tenant>" -var="external_id=<external_id_from_deductive_ai>"
-```
+- Terraform installed (version 1.12.1 or later)
+- External ID provided by Deductive AI
+- Tenant identifier for your organization
 
-3. Share the role ARNs from the output with Deductive AI
+## Quick Start
 
-Example output:
+1. **Clone this repository**
+   ```bash
+   git clone https://github.com/deductive-ai/aws-setup.git
+   cd aws-setup
+   ```
 
-```bash
-Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
+2. **Initialize and apply the configuration**
+   ```bash
+   terraform init
+   terraform plan \
+     -var="tenant=<your-tenant-id>" \
+     -var="external_id=<external-id-from-deductive>" \
+     -var="region=<aws-region>" \
+     -var="aws_profile=<your-aws-profile>"
+   ```
 
-Outputs:
+   > **Note:** Review the plan output above. If everything looks correct, proceed with the apply command.
 
-share_with_deductive = {
-  "aws_region" = "us-west-1"
-  "deductive_role_arn"   = "arn:aws:iam::123456789012:role/DeductiveAssumeRole"
-  "eks_cluster_role_arn" = "arn:aws:iam::123456789012:role/DeductiveAIEKSClusterRole"
-  "ec2_role_arn"         = "arn:aws:iam::123456789012:role/DeductiveAIEC2Role-tenant"
-}
-```
+   ```bash
+   terraform apply \
+     -var="tenant=<your-tenant-id>" \
+     -var="external_id=<external-id-from-deductive>" \
+     -var="region=<aws-region>" \
+     -var="aws_profile=<your-aws-profile>"
+   ```
 
-You'll need:
+3. **Share the output with Deductive AI**
+   
+   After successful deployment, you'll receive output similar to:
+   ```bash
+   Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
 
-- External ID (provided by Deductive AI)
+   Outputs:
 
-Optional parameters:
+   share_with_deductive = {
+     "aws_region" = "us-west-1"
+     "deductive_role_arn" = "arn:aws:iam::123456789012:role/DeductiveAssumeRole-<tenant>"
+     "release_version" = "v1.2.3"
+   }
+   ```
 
-- AWS region (e.g., `-var="region=us-west-1"`)
-- AWS profile (e.g., `-var="aws_profile=my-profile"`)
-
-
-# (Optional) Sync state to S3 bucket
-Optionally, you can save terraform state to s3 bucket.
-1. explicitly defined the backend in providers.tf, otherwise you will see terraform raised warning about `-backend-config was used without a "backend" block in the configuration.`
-```hcl
-terraform {
-  backend "s3" {
-    bucket  = <bucket>
-    key     = "terraform.tfstate"
-    region  = <region>
-    encrypt = true
-  }
-}
-```
-2. Migrate the state from local to s3 (note you may need to switch workspace (via tenant) if you are under multitenant environment `terraform workspace select <tenant>`), then
-```bash
-terraform init
-```
-3. Create new workspace
-```bash
-terraform workspace new <tenant>
-4. Plan the change
-```bash
- terraform plan -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
-```
-5. Apply if things looks sanity
-```bash
- terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
-```
-if you see `Role with name <name> already exists`, import it:
-```bash
-TENANT=<tenant>
-AWS_PROFILE=<profile>
-AWS_REGION=<region>
-
-terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.deductive_role DeductiveAssumeRole
-
-terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.eks_cluster_role DeductiveAIEKSClusterRole
-
-terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.ec2_role  DeductiveAIEC2Role-${TENANT}
-```
-
-# Common FAQ
-If you see terraform version issue, please refer to [terraform](https://developer.hashicorp.com/terraform/install)
-for installing the latest version.
+   Share the `deductive_role_arn` value with your Deductive AI representative.

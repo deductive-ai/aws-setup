@@ -17,4 +17,4 @@ tfsec . --soft-fail
 checkov -d . --framework terraform --quiet --soft-fail || true
 terraform test
 
-echo "All validation checks passed!" 
+echo "All validation checks passed!"
