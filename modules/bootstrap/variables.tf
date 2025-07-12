@@ -10,7 +10,7 @@
 variable "role_info" {
   description = "Information required for role creation"
   type = object({
-    resource_prefix          = optional(string, "Deductive")
+    resource_prefix          = optional(string, "DeductiveAI")
     external_id              = optional(string, null)
     deductive_aws_account_id = optional(string, null)
   })
@@ -26,5 +26,4 @@ variable "additional_tags" {
 variable "tenant" {
   description = "Tenant identifier for multi-tenant deployments"
   type        = string
-  default     = null
 }
