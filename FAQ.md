@@ -21,7 +21,7 @@ terraform {
 terraform init
 ```
 
-3. Create new workspace (mainly for multi-tenant environments)
+3. Create new workspace (for multi-tenant environments)
 
 ```bash
 terraform workspace new <tenant>
@@ -30,20 +30,12 @@ terraform workspace new <tenant>
 4. Plan the change
 
 ```bash
-# For single-tenant (no tenant specified):
-terraform plan -var="region=<region>" -var="aws_profile=<profile>"
-
-# For multi-tenant (with tenant specified):
 terraform plan -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
 ```
 
 5. Apply if things looks sanity
 
 ```bash
-# For single-tenant (no tenant specified):
-terraform apply -var="region=<region>" -var="aws_profile=<profile>"
-
-# For multi-tenant (with tenant specified):
 terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
 ```
 
@@ -54,19 +46,14 @@ TENANT=<tenant>
 AWS_PROFILE=<profile>
 AWS_REGION=<region>
 
-# For single-tenant (no tenant specified):
-terraform import -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.deductive_role DeductiveAssumeRole
-
-# For multi-tenant (with tenant specified):
-TENANT=<tenant>
 terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.deductive_role DeductiveAssumeRole-${TENANT}
 ```
 
-# Common FAQ
+## Common FAQ
 
 If you see terraform version issue, please refer to [terraform](https://developer.hashicorp.com/terraform/install)
 for installing the latest version.
 
-# Development
+## Development
 
 If you want to submit the change, don't forget to install `tflint`, `tfsec`, and `checkov`.
