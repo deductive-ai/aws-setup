@@ -33,7 +33,7 @@ terraform workspace new <tenant>
 terraform plan -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
 ```
 
-5. Apply if things looks sanity
+5. Apply if the change looks good
 
 ```bash
 terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
