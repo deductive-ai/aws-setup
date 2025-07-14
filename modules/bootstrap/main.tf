@@ -36,6 +36,8 @@ resource "aws_iam_role" "deductive_role" {
 }
 
 # Attach the Deductive policy to the role
+# This policy provides comprehensive AWS service permissions for infrastructure management,
+# including EC2, EKS, IAM, S3, ELB, and WAF services with appropriate security controls
 resource "aws_iam_role_policy" "deductive_policy" {
   name   = "${local.resource_prefix}Policy"
   role   = aws_iam_role.deductive_role.id
@@ -43,6 +45,8 @@ resource "aws_iam_role_policy" "deductive_policy" {
 }
 
 # Attach the secrets management policy to the role
+# This policy grants permissions to manage AWS Secrets Manager resources
+# with scope limited to secrets prefixed with 'deductiveai-'
 resource "aws_iam_role_policy" "secrets_management_policy" {
   name   = "${local.resource_prefix}SecretsManagementPolicy"
   role   = aws_iam_role.deductive_role.id
@@ -50,6 +54,8 @@ resource "aws_iam_role_policy" "secrets_management_policy" {
 }
 
 # Attach the EBS CSI driver policy to the role
+# This AWS managed policy provides the necessary permissions for the EBS CSI driver
+# to provision and manage EBS volumes within EKS clusters
 resource "aws_iam_role_policy_attachment" "ebs_csi_driver_policy_attachment" {
   role       = aws_iam_role.deductive_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
