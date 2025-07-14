@@ -40,6 +40,8 @@ data "aws_iam_policy_document" "assume_role_policy" {
 }
 
 # Define the main policy document for Deductive operations
+# This policy document defines comprehensive permissions for managing AWS infrastructure
+# components including compute, networking, storage, and security services
 data "aws_iam_policy_document" "deductive_policy" {
   # Read-only permissions for various AWS services
   statement {
@@ -591,6 +593,8 @@ data "aws_iam_policy_document" "deductive_policy" {
 }
 
 # Define the secrets management policy document
+# This policy document provides controlled access to AWS Secrets Manager
+# with resource scope limited to secrets following the 'deductiveai-' naming convention
 data "aws_iam_policy_document" "secrets_management_policy" {
   statement {
     effect = "Allow"
@@ -615,6 +619,9 @@ data "aws_iam_policy_document" "secrets_management_policy" {
   }
 }
 
+# Define the EC2 custom policy document
+# This policy document provides specialized permissions for application load balancing
+# and object storage access required by ingress controllers and related services
 data "aws_iam_policy_document" "ec2_custom_policy_document" {
   statement {
     sid    = "S3Access"
