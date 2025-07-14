@@ -520,10 +520,14 @@ data "aws_iam_policy_document" "deductive_policy" {
     actions = [
       "elasticloadbalancing:ModifyLoadBalancerAttributes",
       "wafv2:CreateWebACL",
+      "wafv2:DeleteWebACL",
+      "wafv2:UpdateWebACL",
       "wafv2:TagResource",
+      "wafv2:UntagResource",
       "wafv2:GetWebACL",
       "wafv2:ListTagsForResource",
       "wafv2:AssociateWebACL",
+      "wafv2:DisassociateWebACL",
       "elasticloadbalancing:SetWebACL",
       "wafv2:GetWebACLForResource"
     ]
