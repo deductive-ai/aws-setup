@@ -1,45 +1,57 @@
-# (Optional) Sync state to S3 bucket
+# Backend Configuration
 
-Optionally, you can save terraform state to s3 bucket.
+This repository supports both local and S3 backends with a safe-by-default approach.
 
-1. explicitly defined the backend in providers.tf, otherwise you will see terraform raised warning about `-backend-config was used without a "backend" block in the configuration.`
+## Local Backend (Default)
 
-```hcl
-terraform {
-  backend "s3" {
-    bucket  = <bucket>
-    key     = "terraform.tfstate"
-    region  = <region>
-    encrypt = true
-  }
-}
-```
-
-2. Migrate the state from local to s3 (note you may need to switch workspace (via tenant) if you are under multitenant environment `terraform workspace select <tenant>`), then
+By default, Terraform uses local backend:
 
 ```bash
 terraform init
+terraform plan
+terraform apply
 ```
 
-3. Create new workspace (for multi-tenant environments)
+State is stored locally in `terraform.tfstate`.
+
+## S3 Backend (for multi-tenant environment)
+
+To use S3 backend:
 
 ```bash
+terraform init -backend-config=backend-s3.conf
+terraform plan
+terraform apply
+```
+
+State is stored in S3 bucket: `s3://deductive-ai-iac/<tenant>/terraform.tfstate`
+
+## Backend Configuration Files
+
+The repository includes:
+
+- `backend-local.conf` - Local backend configuration (default)
+- `backend-s3.conf` - S3 backend configuration
+
+## Multi-tenant Workspaces
+
+For multi-tenant environments, switch workspace before operations:
+
+```bash
+# Create new workspace
 terraform workspace new <tenant>
-```
 
-4. Plan the change
+# Or select existing workspace
+terraform workspace select <tenant>
 
-```bash
+# Then run normal commands
 terraform plan -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
-```
-
-5. Apply if the change looks good
-
-```bash
 terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
 ```
 
-if you see `Role with name <name> already exists`, import it:
+## Troubleshooting
+
+If you see `Role with name <name> already exists`, import it:
 
 ```bash
 TENANT=<tenant>
