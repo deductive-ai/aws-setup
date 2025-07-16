@@ -7,13 +7,8 @@
  the license agreement you entered into with Deductive AI, Inc.
 */
 terraform {
-  # Backend configuration:
-  # Default: terraform init (uses local backend)
-  # S3: terraform init -backend-config=backend-s3.conf
-  backend "s3" {}
 }
 
 provider "aws" {
-  region  = var.region
-  profile = var.aws_profile
+  region = var.region
 }

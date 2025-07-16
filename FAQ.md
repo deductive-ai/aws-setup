@@ -1,71 +1,183 @@
-# Backend Configuration
+# Terraform Backend Management
 
-This repository supports both local and S3 backends with a safe-by-default approach.
+This repository supports remote state management using S3 with automated safety features.
 
-## Local Backend (Default)
+## Quick Start
 
-By default, Terraform uses local backend:
-
+### One-Time Setup
 ```bash
-terraform init
-terraform plan
-terraform apply
+# Install git hooks and validate Go installation
+make setup-git-hooks
 ```
 
-State is stored locally in `terraform.tfstate`.
-
-## S3 Backend (for multi-tenant environment)
-
-To use S3 backend:
-
+### Daily Workflow
 ```bash
-terraform init -backend-config=backend-s3.conf
-terraform plan
-terraform apply
+# Standard usage (local backend - default)
+make use-local-backend
+terraform plan -var="tenant=<tenant>" -var="region=<region>" -var="external_id=<external_id>"
+terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="external_id=<external_id>"
+git commit -m "your changes"  # Auto-enforces local backend
+
+# Multi-tenant AWS (S3 backend)
+make use-s3-backend
+terraform plan -var="tenant=<tenant>" -var="region=<region>" -var="external_id=<external_id>"
+terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="external_id=<external_id>"
+make use-local-backend  # Switch back before committing
 ```
 
-State is stored in S3 bucket: `s3://deductive-ai-iac/<tenant>/terraform.tfstate`
+## Backend Types
 
-## Backend Configuration Files
+### Local Backend (Default)
 
-The repository includes:
+- **Usage**: Standard customer deployments
+- **State Storage**: `terraform.tfstate` (local file)
+- **Command**: `make use-local-backend`
+- **Safety**: Required for all commits (enforced by pre-commit hook)
 
-- `backend-local.conf` - Local backend configuration (default)
-- `backend-s3.conf` - S3 backend configuration
+### S3 Backend (Multi-tenant)
 
-## Multi-tenant Workspaces
+- **Usage**: Deductive AWS multi-tenant environments
+- **State Storage**: `s3://deductive-ai-iac/terraform.tfstate`
+- **Command**: `make use-s3-backend`
+- **Safety**: Automatically switched to local before commits
 
-For multi-tenant environments, switch workspace before operations:
+## Features
+
+### Automated Git Hooks
+The pre-commit hook automatically:
+- **Detects S3 backend** in commits and switches to local
+- **Runs validation pipeline** (terraform fmt, validate, tflint, tfsec, checkov)
+- **Prevents broken commits** with clear error messages
+- **Provides usage instructions** when S3 backend detected
+
+### Backend Toggle Technology
+- **hclwrite-based**: Uses HashiCorp's official HCL manipulation library
+- **Syntax-safe**: Guaranteed correct HCL output
+- **AST-level**: Precise manipulation, no text parsing errors
+- **Go-powered**: Modern, reliable tooling
+
+### Available Commands
+```bash
+# Backend Management
+make use-local-backend    # Switch to local backend
+make use-s3-backend       # Switch to S3 backend
+
+# Setup & Validation  
+make setup-git-hooks      # Install git hooks (one-time)
+make validate            # Run validation pipeline
+make format              # Format Terraform files
+
+# Tool Installation
+make install-tools       # Install tflint, tfsec, checkov
+```
+
+## Authentication
+
+### AWS Credentials
+
+This repository uses **environment variables** for AWS authentication:
 
 ```bash
-# Create new workspace
-terraform workspace new <tenant>
-
-# Or select existing workspace
-terraform workspace select <tenant>
-
-# Then run normal commands
-terraform plan -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
-terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="aws_profile=<profile>"
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+export AWS_SESSION_TOKEN="your-session-token"  # If using temporary credentials
 ```
+
+**Note**: AWS profiles are no longer used - environment variables provide better CI/CD integration.
 
 ## Troubleshooting
+
+### Role Already Exists Error
 
 If you see `Role with name <name> already exists`, import it:
 
 ```bash
 TENANT=<tenant>
-AWS_PROFILE=<profile>
 AWS_REGION=<region>
 
-terraform import -var="tenant=$TENANT" -var="aws_profile=$AWS_PROFILE" -var="region=$AWS_REGION" module.bootstrap.aws_iam_role.deductive_role DeductiveAssumeRole-${TENANT}
+terraform import -var="tenant=$TENANT" -var="region=$AWS_REGION" -var="external_id=<external_id>" module.bootstrap.aws_iam_role.deductive_role DeductiveAssumeRole-${TENANT}
 ```
 
-## Common FAQ
+### Pre-commit Hook Issues
 
-If you see terraform version issue, please refer to [terraform](https://developer.hashicorp.com/terraform/install)
-for installing the latest version.
+If the pre-commit hook fails:
 
-## Development
+```bash
+# Check Go installation
+go version  # Should be 1.21+
 
-If you want to submit the change, don't forget to install `tflint`, `tfsec`, and `checkov`.
+# Reinstall hooks
+make setup-git-hooks
+
+# Run validation manually
+make validate
+```
+
+### Backend Switch Issues
+
+If backend switching fails:
+
+```bash
+# Check providers.tf syntax
+terraform validate
+
+# Force clean initialization
+rm -rf .terraform
+make use-local-backend
+terraform init
+```
+
+### Permission Errors
+
+If AWS operations fail:
+
+```bash
+# Verify credentials
+aws sts get-caller-identity
+
+# Check environment variables
+echo $AWS_ACCESS_KEY_ID
+echo $AWS_SECRET_ACCESS_KEY
+```
+
+## Development Requirements
+
+### Tool Installation
+
+```bash
+# Install all required tools (macOS)
+make install-tools
+
+# Manual installation
+brew install terraform go tflint tfsec
+pipx install checkov
+```
+
+### Required Tools
+- **Go 1.21+** (for hclwrite backend management)
+- **Terraform** (infrastructure management)
+- **tflint** (Terraform linting)
+- **tfsec** (security scanning)
+- **checkov** (compliance checking)
+
+### Standard Workflow
+
+1. **Setup**: `make setup-git-hooks` (one-time)
+2. **Standard usage**: Use `make use-local-backend` (default)
+3. **Validation**: `make validate` before commits
+4. **Multi-tenant**: `make use-s3-backend` for Deductive AWS operations
+5. **Commit**: Always switch back with `make use-local-backend`
+
+## FAQ
+
+### Q: When should I use S3 backend?
+
+**A**: Only for Deductive AWS multi-tenant environments. Standard customer deployments should use local backend (default).
+
+### Q: What if I don't have Go installed?
+
+**A**: Go 1.24.5 is required for the hclwrite-based backend management. Install with `brew install go` on macOS or from [golang.org](https://golang.org/dl/).
+
+### Q: How do I update Terraform version?
+
+**A**: Refer to [HashiCorp Terraform installation guide](https://developer.hashicorp.com/terraform/install) for the latest version.
