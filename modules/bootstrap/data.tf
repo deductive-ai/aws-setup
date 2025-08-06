@@ -314,12 +314,21 @@ data "aws_iam_policy_document" "deductive_policy" {
   #   }
   # }
 
+  # Allow listing SQS queues for cleanup operations
+  statement {
+    effect = "Allow"
+    actions = [
+      "sqs:listqueues"
+    ]
+    resources = ["*"]
+  }
+
   # Allow Karpenter to read from DeductiveAI's scaling SQS
   statement {
     effect = "Allow"
     actions = [
       "sqs:createqueue",
-      "sqs:getqueueattributes",
+      "sqs:getqueueattributes"
     ]
     resources = [
       "arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:DeductiveKarpenterInterruptionQueue*"
@@ -608,7 +617,8 @@ data "aws_iam_policy_document" "secrets_management_policy" {
       "secretsmanager:UntagResource",
       "secretsmanager:GetResourcePolicy",
       "secretsmanager:PutResourcePolicy",
-      "secretsmanager:DeleteSecret"
+      "secretsmanager:DeleteSecret",
+      "secretsmanager:ListSecrets"
     ]
     resources = ["arn:aws:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:deductiveai-*"]
     condition {
