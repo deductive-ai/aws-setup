@@ -72,7 +72,9 @@ data "aws_iam_policy_document" "deductive_policy" {
       "iam:CreateServiceLinkedRole",
       # ACM Read-Only Actions
       "acm:Describe*",
-      "acm:List*"
+      "acm:List*",
+      # Secrets Manager cleanup Actions
+      "secretsmanager:ListSecrets"
     ]
     resources = ["*"]
   }
@@ -605,6 +607,7 @@ data "aws_iam_policy_document" "deductive_policy" {
 # This policy document provides controlled access to AWS Secrets Manager
 # with resource scope limited to secrets following the 'deductiveai-' naming convention
 data "aws_iam_policy_document" "secrets_management_policy" {
+  # Resource-level secrets management with tag-based access control
   statement {
     effect = "Allow"
     actions = [
@@ -617,8 +620,7 @@ data "aws_iam_policy_document" "secrets_management_policy" {
       "secretsmanager:UntagResource",
       "secretsmanager:GetResourcePolicy",
       "secretsmanager:PutResourcePolicy",
-      "secretsmanager:DeleteSecret",
-      "secretsmanager:ListSecrets"
+      "secretsmanager:DeleteSecret"
     ]
     resources = ["arn:aws:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:deductiveai-*"]
     condition {
