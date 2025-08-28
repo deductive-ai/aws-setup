@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+# Pre-commit hook to ensure S3 backend is always commented out in commits
+# This ensures the repository always has the "safe" local backend as default
+
+echo "Checking providers.tf for uncommented S3 backend..."
+
+# Check if providers.tf has S3 backend active
+if grep -q "backend \"s3\"" providers.tf; then
+    echo ""
+    echo "WARNING: Found S3 backend configuration in providers.tf"
+    echo ""
+    echo "For repository safety, commits must use local backend."
+    echo "The S3 backend will be removed from this commit."
+    echo ""
+    echo "To use S3 backend for operations:"
+    echo "  make use-s3-backend    # Switch to S3"
+    echo "  terraform plan/apply   # Run operations"
+    echo "  make use-local-backend # Switch back before committing"
+    echo ""
+    
+    # Use the robust hclwrite-based backend toggle
+    ./scripts/backend-toggle.sh local
+    
+    # Add the modified file to the commit
+    git add providers.tf
+    
+    echo "Amended commit to use local backend"
+    echo "   Your commit will proceed with local backend configuration"
+else
+    echo "Local backend is active"
+fi
+
+echo ""
+echo "Running validation checks..."
+
+# Run the validation script
+if [ -f "scripts/validate.sh" ]; then
+    if ! bash scripts/validate.sh; then
+        echo ""
+        echo "ERROR: Pre-commit validation failed!"
+        echo "Please fix the issues above before committing."
+        exit 1
+    fi
+else
+    echo "WARNING: Validation script not found at scripts/validate.sh"
+fi
+
+echo ""
+echo "All checks passed. Proceeding with commit." 
