@@ -20,7 +20,7 @@ mkdir -p .git/hooks
 cp .githooks/pre-commit .git/hooks/pre-commit
 
 # Make scripts executable
-for script in backend-toggle.sh setup.sh setup-git-hooks.sh setup-python-env-uv.sh validate.sh; do
+for script in .git/hooks/pre-commit backend-toggle.sh setup.sh setup-git-hooks.sh setup-python-env-uv.sh validate.sh; do
     chmod +x scripts/$script
 done
 
