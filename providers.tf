@@ -7,15 +7,8 @@
  the license agreement you entered into with Deductive AI, Inc.
 */
 terraform {
-  # backend "s3" {
-  #   bucket  = "deductive-ai-iac"
-  #   key     = "terraform.tfstate"
-  #   region  = "us-west-1"
-  #   encrypt = true
-  # }
 }
 
 provider "aws" {
-  region  = var.region
-  profile = var.aws_profile
+  region = var.region
 }
