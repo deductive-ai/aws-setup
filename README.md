@@ -4,7 +4,7 @@ This repository contains Terraform configurations to set up AWS integration for 
 
 ## Prerequisites
 
-- Terraform installed (version 1.12.1 or later)
+- Ubuntu/Fedora or macOS
 - External ID provided by Deductive AI
 - Tenant identifier for your organization
 
@@ -16,6 +16,11 @@ This repository contains Terraform configurations to set up AWS integration for 
    git clone https://github.com/deductive-ai/aws-setup.git
    cd aws-setup
    ```
+** One time setup for the environment setup for this repo:
+```
+make setup-env
+make setup-git-hooks
+```
 
 2. **Initialize and apply the configuration**
 

@@ -15,9 +15,8 @@ use-s3-backend:
 setup-git-hooks:
 	./scripts/setup-git-hooks.sh
 
-install-tools: ## Install required tools (macOS)
-	brew install tflint tfsec
-	pipx install checkov
+setup-env:
+	./scripts/setup.sh
 
 clean: ## Clean up Terraform files
-	rm -rf .terraform terraform.tfstate* tfplan 
+	rm -rf .terraform terraform.tfstate* tfplan

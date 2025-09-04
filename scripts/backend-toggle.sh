@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 # Wrapper script for hclwrite-based backend toggling
@@ -29,4 +29,4 @@ fi
 # Run the Go program
 go run backend-toggle.go "$PROJECT_ROOT/providers.tf" "$MODE"
 
-echo "Backend toggle complete." 
+echo "Backend toggle complete."
