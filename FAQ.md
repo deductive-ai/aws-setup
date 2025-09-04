@@ -50,19 +50,13 @@ The pre-commit hook automatically:
 - **Prevents broken commits** with clear error messages
 - **Provides usage instructions** when S3 backend detected
 
-### Backend Toggle Technology
-- **hclwrite-based**: Uses HashiCorp's official HCL manipulation library
-- **Syntax-safe**: Guaranteed correct HCL output
-- **AST-level**: Precise manipulation, no text parsing errors
-- **Go-powered**: Modern, reliable tooling
-
 ### Available Commands
 ```bash
 # Backend Management
 make use-local-backend    # Switch to local backend
 make use-s3-backend       # Switch to S3 backend
 
-# Setup & Validation  
+# Setup & Validation
 make setup-git-hooks      # Install git hooks (one-time)
 make validate            # Run validation pipeline
 make format              # Format Terraform files
