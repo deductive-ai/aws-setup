@@ -102,4 +102,4 @@ gROOT_DIR="$(cd -- "$(dirname -- "$BASH_SOURCE")/.." && pwd)"
 
 # run validation once
 # get the script directory then the validate.sh is on the same folder
-PATH="$PATH:$(go env GOPATH):${gROOT_DIR}/.venv/bin" "$gCURRENT_DIR/validate.sh"
+PATH="$PATH:$(go env GOPATH)/bin:${gROOT_DIR}/.venv/bin" "$gCURRENT_DIR/validate.sh"

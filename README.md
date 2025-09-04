@@ -19,6 +19,7 @@ This repository contains Terraform configurations to set up AWS integration for 
 ** One time setup for the environment setup for this repo:
 ```
 make setup-env
+make setup-git-hooks
 ```
 
 2. **Initialize and apply the configuration**

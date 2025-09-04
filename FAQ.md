@@ -136,15 +136,10 @@ echo $AWS_SECRET_ACCESS_KEY
 
 ## Development Requirements
 
-### Tool Installation
+### Setup environments
 
 ```bash
-# Install all required tools (macOS)
-make install-tools
-
-# Manual installation
-brew install terraform go tflint tfsec
-pipx install checkov
+make setup-env
 ```
 
 ### Required Tools
