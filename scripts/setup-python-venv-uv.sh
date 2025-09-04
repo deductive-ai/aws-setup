@@ -2,7 +2,7 @@
 
 # Generic Python Environment Setup Script with uv
 # Creates a virtual environment using uv and installs dependencies
-# Usage: `scripts/setup-python-env-uv.sh`
+# Usage: `scripts/setup-python-venv-uv.sh`
 
 # Fail fast on any error
 set -euo pipefail

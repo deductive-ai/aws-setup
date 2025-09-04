@@ -5,6 +5,9 @@
 echo "Setting up git hooks..."
 gROOT_DIR="$(cd -- "$(dirname -- "$BASH_SOURCE")/.." && pwd)"
 
+# Activate virtual environment
+source $gROOT_DIR/.venv/bin/activate
+
 # Check Go installation and version
 for bin in go tflint tfsec checkov; do
     if ! command -v $bin &> /dev/null; then
@@ -20,7 +23,8 @@ mkdir -p .git/hooks
 cp .githooks/pre-commit .git/hooks/pre-commit
 
 # Make scripts executable
-for script in .git/hooks/pre-commit backend-toggle.sh setup.sh setup-git-hooks.sh setup-python-env-uv.sh validate.sh; do
+chmod +x .git/hooks/pre-commit
+for script in backend-toggle.sh setup.sh setup-git-hooks.sh setup-python-venv-uv.sh validate.sh; do
     chmod +x scripts/$script
 done
 

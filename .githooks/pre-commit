@@ -5,6 +5,11 @@
 
 echo "Checking providers.tf for uncommented S3 backend..."
 
+HOOKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOT_GIT_DIR="$(dirname "$HOOKS_DIR")"
+gROOT_DIR="$(dirname "$DOT_GIT_DIR")"
+source $gROOT_DIR/.venv/bin/activate
+
 # Check if providers.tf has S3 backend active
 if grep -q "backend \"s3\"" providers.tf; then
     echo ""
