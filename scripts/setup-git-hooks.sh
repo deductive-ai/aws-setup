@@ -6,7 +6,7 @@ echo "Setting up git hooks..."
 gROOT_DIR="$(cd -- "$(dirname -- "$BASH_SOURCE")/.." && pwd)"
 
 # Check Go installation and version
-for bin in go tflint tfsec checko; do
+for bin in go tflint tfsec checkov; do
     if ! command -v $bin &> /dev/null; then
         echo "ERROR: $bin is not installed, reconfiguring the entire environment..."
         $gROOT_DIR/scripts/setup.sh
