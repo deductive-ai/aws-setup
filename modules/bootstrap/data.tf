@@ -333,7 +333,7 @@ data "aws_iam_policy_document" "deductive_policy" {
       "sqs:getqueueattributes"
     ]
     resources = [
-      "arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:DeductiveKarpenterInterruptionQueue*"
+      "arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}KarpenterInterruptionQueue*"
     ]
     condition {
       test     = "StringEquals"
@@ -352,7 +352,7 @@ data "aws_iam_policy_document" "deductive_policy" {
       "sqs:deletequeue",
     ]
     resources = [
-      "arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:DeductiveKarpenterInterruptionQueue*"
+      "arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:${local.resource_prefix}KarpenterInterruptionQueue*"
     ]
     condition {
       test     = "StringEquals"
@@ -371,7 +371,7 @@ data "aws_iam_policy_document" "deductive_policy" {
       "events:ListTargetsByRule"
     ]
     resources = [
-      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*${local.resource_prefix}Karpenter*"
     ]
   }
 
@@ -382,7 +382,7 @@ data "aws_iam_policy_document" "deductive_policy" {
       "events:TagResource",
     ]
     resources = [
-      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*${local.resource_prefix}Karpenter*"
     ]
     condition {
       test     = "StringEquals"
@@ -400,7 +400,7 @@ data "aws_iam_policy_document" "deductive_policy" {
       "events:RemoveTargets"
     ]
     resources = [
-      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*${local.resource_prefix}Karpenter*"
     ]
     condition {
       test     = "StringEquals"
@@ -415,7 +415,7 @@ data "aws_iam_policy_document" "deductive_policy" {
       "events:PutRule",
     ]
     resources = [
-      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*DeductiveKarpenter*"
+      "arn:aws:events:*:${data.aws_caller_identity.current.account_id}:rule/*${local.resource_prefix}Karpenter*"
     ]
     condition {
       test     = "StringEquals"
