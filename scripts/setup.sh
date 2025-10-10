@@ -18,7 +18,7 @@ function install_common_tools_mac() {
   done
 }
 
-function install_common_tools_ubuntu() {
+function install_common_tools_debian() {
     sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
     wget -O- https://apt.releases.hashicorp.com/gpg | \
     gpg --dearmor | \
@@ -49,8 +49,8 @@ else
   if [ -f /etc/os-release ]; then
     id=$(grep ^ID= /etc/os-release | sed 's/ID=//')
     case "$id" in
-    ubuntu)
-      install_common_tools_ubuntu
+    ubuntu|debian)
+      install_common_tools_debian
       ;;
     fedora)
       install_common_tools_fedora
