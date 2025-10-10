@@ -552,7 +552,7 @@ data "aws_iam_policy_document" "deductive_policy" {
 
   # RDS permissions for Aurora and database operations
   statement {
-    sid = "RDSManagement"
+    sid    = "RDSManagement"
     effect = "Allow"
     actions = [
       "rds:*"
