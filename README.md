@@ -4,7 +4,7 @@ This repository contains Terraform configurations to set up AWS integration for 
 
 ## Prerequisites
 
-- Ubuntu/Fedora or macOS
+- Ubuntu/Debian/Fedora or macOS
 - External ID provided by Deductive AI
 - Tenant identifier for your organization
 

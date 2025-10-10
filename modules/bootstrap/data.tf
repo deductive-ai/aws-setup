@@ -74,7 +74,9 @@ data "aws_iam_policy_document" "deductive_policy" {
       "acm:Describe*",
       "acm:List*",
       # Secrets Manager cleanup Actions
-      "secretsmanager:ListSecrets"
+      "secretsmanager:ListSecrets",
+      # Describe RDS
+      "rds:Describe*"
     ]
     resources = ["*"]
   }
@@ -545,6 +547,22 @@ data "aws_iam_policy_document" "deductive_policy" {
       "wafv2:GetWebACLForResource"
     ]
     resources = ["*"]
+  }
+
+
+  # RDS permissions for Aurora and database operations
+  statement {
+    sid = "RDSManagement"
+    effect = "Allow"
+    actions = [
+      "rds:*"
+    ]
+    resources = ["arn:aws:rds:*:${data.aws_caller_identity.current.account_id}:*"]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
   }
 
   # Explicitly deny attaching admin policies

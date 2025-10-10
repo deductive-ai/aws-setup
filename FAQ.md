@@ -11,17 +11,25 @@ make setup-git-hooks
 ```
 
 ### Daily Workflow
+# Preparation
+Export your variables to environment before proceeding:
+1. Export aws profile if you will use for terraform creation: `export AWS_PROFILE=<aws-profile>`
+2. `export TENANT=<tenant> REGION=<region> EXTERNAL_ID=<external_id>`
+
 ```bash
 # Standard usage (local backend - default)
 make use-local-backend
-terraform plan -var="tenant=<tenant>" -var="region=<region>" -var="external_id=<external_id>"
-terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="external_id=<external_id>"
+terraform plan -var="tenant=$TENANT" -var="region=$REGION" -var="external_id=$EXTERNAL_ID"
+terraform apply -var="tenant=$TENANT" -var="region=$REGION" -var="external_id=$EXTERNAL_ID"
 git commit -m "your changes"  # Auto-enforces local backend
 
 # Multi-tenant AWS (S3 backend)
 make use-s3-backend
-terraform plan -var="tenant=<tenant>" -var="region=<region>" -var="external_id=<external_id>"
-terraform apply -var="tenant=<tenant>" -var="region=<region>" -var="external_id=<external_id>"
+# create workspace for a new tenant
+terraform init
+terraform workspace new $TENANT
+terraform plan -var="tenant=$TENANT" -var="region=$REGION" -var="external_id=$EXTERNAL_ID"
+terraform apply -var="tenant=$TENANT" -var="region=$REGION" -var="external_id=$EXTERNAL_ID"
 make use-local-backend  # Switch back before committing
 ```
 
