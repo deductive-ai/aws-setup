@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+source .venv/bin/activate
+
 echo "Running Terraform Validation..."
 
 # Check required tools

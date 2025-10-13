@@ -565,6 +565,36 @@ data "aws_iam_policy_document" "deductive_policy" {
     }
   }
 
+  # ElastiCache: CreateReplicationGroup requires access to referenced resources
+  # like parameter groups, subnet groups, and security groups
+  statement {
+    sid    = "ElastiCacheCreateReferencedResources"
+    effect = "Allow"
+    actions = [
+      "elasticache:*",
+    ]
+    resources = [
+      "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:parametergroup:*",
+      "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:subnetgroup:*",
+      "arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:securitygroup:*"
+    ]
+  }
+
+  # ElastiCache management operations - use ResourceTag for existing resources
+  statement {
+    sid    = "ElastiCacheManagement"
+    effect = "Allow"
+    actions = [
+      "elasticache:*",
+    ]
+    resources = ["arn:aws:elasticache:*:${data.aws_caller_identity.current.account_id}:*"]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/creator"
+      values   = ["deductive-ai"]
+    }
+  }
+
   # Explicitly deny attaching admin policies
   statement {
     effect = "Deny"
