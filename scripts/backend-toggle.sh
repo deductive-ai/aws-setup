@@ -30,3 +30,5 @@ fi
 go run backend-toggle.go "$PROJECT_ROOT/providers.tf" "$MODE"
 
 echo "Backend toggle complete."
+
+terraform init -migrate-state
