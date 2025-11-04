@@ -54,7 +54,6 @@ make setup-git-hooks
    share_with_deductive = {
      "aws_region" = "us-west-1"
      "deductive_role_arn" = "arn:aws:iam::123456789012:role/DeductiveAssumeRole-<tenant>"
-     "release_version" = "v1.2.3"
    }
    ```
 

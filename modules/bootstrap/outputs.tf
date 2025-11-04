@@ -14,7 +14,3 @@ output "deductive_role_arn" {
   value       = aws_iam_role.deductive_role.arn
 }
 
-output "git_version" {
-  description = "The current Git version"
-  value       = data.external.git_version.result.version
-}
