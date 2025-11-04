@@ -4,6 +4,5 @@ output "share_with_deductive" {
   value = {
     "aws_region"         = var.region
     "deductive_role_arn" = module.bootstrap.deductive_role_arn
-    "release_version"    = module.bootstrap.git_version
   }
 } 
