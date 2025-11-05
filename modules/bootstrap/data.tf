@@ -432,7 +432,10 @@ data "aws_iam_policy_document" "deductive_policy" {
       "eks:DeregisterCluster",
       "eks:RegisterCluster",
       "eks:TagResource",
-      "eks:UntagResource"
+      "eks:UntagResource",
+      "eks:AssociateAccessPolicy",
+      "eks:DisassociateAccessPolicy",
+      "eks:ListAssociatedAccessPolicies"
     ]
     resources = ["arn:aws:eks:*:${data.aws_caller_identity.current.account_id}:*/*"]
     condition {
@@ -642,7 +645,7 @@ data "aws_iam_policy_document" "deductive_policy" {
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}*SecretsWriterReaderRole*",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}*KarpenterControllerRole*",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}*ALBControllerRole*",
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}EC2Role-${var.tenant}"
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}EC2Role*"
     ]
   }
 }
