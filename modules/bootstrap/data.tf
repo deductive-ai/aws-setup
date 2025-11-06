@@ -432,10 +432,7 @@ data "aws_iam_policy_document" "deductive_policy" {
       "eks:DeregisterCluster",
       "eks:RegisterCluster",
       "eks:TagResource",
-      "eks:UntagResource",
-      "eks:AssociateAccessPolicy",
-      "eks:DisassociateAccessPolicy",
-      "eks:ListAssociatedAccessPolicies"
+      "eks:UntagResource"
     ]
     resources = ["arn:aws:eks:*:${data.aws_caller_identity.current.account_id}:*/*"]
     condition {
@@ -443,6 +440,24 @@ data "aws_iam_policy_document" "deductive_policy" {
       variable = "aws:ResourceTag/creator"
       values   = ["deductive-ai"]
     }
+  }
+
+  # EKS access entry management
+  # Access entries don't support resource tags, so we scope by ARN pattern to roles containing "Deductive"
+  statement {
+    effect = "Allow"
+    actions = [
+      "eks:AssociateAccessPolicy",
+      "eks:DisassociateAccessPolicy",
+      "eks:CreateAccessEntry",
+      "eks:DeleteAccessEntry",
+      "eks:DescribeAccessEntry",
+      "eks:UpdateAccessEntry"
+    ]
+    resources = [
+      "arn:aws:eks:*:${data.aws_caller_identity.current.account_id}:access-entry/*/role/${data.aws_caller_identity.current.account_id}/*Deductive*/*",
+      "arn:aws:eks:*:${data.aws_caller_identity.current.account_id}:cluster/*"
+    ]
   }
 
   # S3 bucket management
