@@ -1,43 +1,59 @@
 #!/usr/bin/env bash
 
 # Generic Python Environment Setup Script with uv
-# Creates a virtual environment using uv and installs dependencies
-# Usage: `scripts/setup-python-venv-uv.sh`
+# Creates a virtual environment using uv and installs dependencies for any project
+# Usage: ./setup-python-env-uv.sh <project_directory>
 
 # Fail fast on any error
 set -euo pipefail
 
-# Get root directory
-gROOT_DIR="$(cd -- "$(dirname -- "$BASH_SOURCE")/.." && pwd)"
+# Check if project directory argument is provided
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 <project_directory>" >&2
+  exit 1
+fi
 
-echo "Setting up Python Environment for $gROOT_DIR"
-echo "Working directory: $gROOT_DIR"
+PROJECT_DIR="$1"
+
+# Check if project directory exists
+if [ ! -d "$PROJECT_DIR" ]; then
+  echo "ERROR: Project directory '$PROJECT_DIR' does not exist" >&2
+  exit 1
+fi
+
+# Convert to absolute path for safety
+echo "Changing to project directory: $PROJECT_DIR"
+PROJECT_DIR=$(cd "$PROJECT_DIR" && pwd)
+
+echo "Setting up Python Environment for project: $PROJECT_DIR"
+echo "Working directory: $PROJECT_DIR"
 
 # Navigate to the project directory
-cd "$gROOT_DIR"
+cd "$PROJECT_DIR"
 
-# Check if uv is installed, if not install it
-if ! command -v uv &>/dev/null; then
-  echo "uv not found. Installing uv..."
-  curl -LsSf https://astral.sh/uv/install.sh | sh
+# Check if uv is installed or at expected version
+UV_VERSION="0.9.13"
+if ! command -v uv &>/dev/null || [ "$(uv --version | awk '{print $2}')" != "$UV_VERSION" ]; then
+  if ! command -v uv &>/dev/null; then
+    echo "uv not found. Installing uv..."
+  else
+    echo "uv version mismatch. Currently you have $(uv --version), expected $UV_VERSION. Refreshing uv to $UV_VERSION..."
+  fi
+  curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh
+  # Add to PATH for current session
   export PATH="$HOME/.local/bin:$PATH"
 fi
 
-# Check uv version
-echo "Using uv: $(uv --version)"
-
-# Install Python 3.13.3 if not available
-# This matches the infra setup and ensures compatibility
-echo "Ensuring Python 3.13.3 is available..."
-uv python install 3.13.3
+PYTHON_VERSION="3.13.9"
 
 # Create virtual environment and install dependencies using uv
-echo "Creating virtual environment with uv (Python 3.13.3)..."
-uv venv --python 3.13.3 .venv --clear
+# uv venv will automatically download Python if not available
+echo "Creating virtual environment with uv (Python $PYTHON_VERSION)..."
+uv venv --python $PYTHON_VERSION .venv --clear --allow-existing
 
 # Check if requirements.txt exists in the project directory
 if [ ! -f "requirements.txt" ]; then
-  echo "ERROR: requirements.txt not found in $gROOT_DIR" >&2
+  echo "ERROR: requirements.txt not found in $PROJECT_DIR" >&2
   echo "Please create a requirements.txt file in the project directory" >&2
   exit 1
 fi
@@ -58,7 +74,8 @@ PYTHON_VERSION=$(.venv/bin/python --version)
 echo "Python version: $PYTHON_VERSION"
 
 echo "Python environment setup completed successfully!"
-echo "Virtual environment: $gROOT_DIR/.venv"
+echo "Project: $PROJECT_DIR"
+echo "Virtual environment: $PROJECT_DIR/.venv"
 echo "Python version: $PYTHON_VERSION"
 echo "To activate the environment, run:"
-echo "source $gROOT_DIR/.venv/bin/activate"
+echo "source $PROJECT_DIR/.venv/bin/activate"

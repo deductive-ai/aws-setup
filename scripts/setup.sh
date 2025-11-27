@@ -95,10 +95,10 @@ else
     exit 1
 fi
 
-# configure venv for checkov
-$gCURRENT_DIR/setup-python-venv-uv.sh
-
 gROOT_DIR="$(cd -- "$(dirname -- "$BASH_SOURCE")/.." && pwd)"
+
+# configure venv for checkov
+$gCURRENT_DIR/setup-python-venv-uv.sh $gROOT_DIR
 
 # run validation once
 # get the script directory then the validate.sh is on the same folder
