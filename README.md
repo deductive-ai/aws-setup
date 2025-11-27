@@ -19,28 +19,20 @@ This repository contains Terraform configurations to set up AWS integration for 
 ** One time setup for the environment setup for this repo:
 ```
 make setup-env
-make setup-git-hooks
 ```
 
 2. **Initialize and apply the configuration**
 
    ```bash
+   export AWS_PROFILE=<your-aws-profile> TENANT=<tenant> REGION=<region> EXTERNAL_ID=<external_id_from_deductive>
    terraform init
-   terraform plan \
-     -var="tenant=<your-tenant-id>" \
-     -var="external_id=<external-id-from-deductive>" \
-     -var="region=<aws-region>" \
-     -var="aws_profile=<your-aws-profile>"
+   terraform plan -var="tenant=$TENANT" -var="region=$REGION" -var="external_id=$EXTERNAL_ID" -var="aws_profile=$AWS_PROFILE"
    ```
 
    > **Note:** Review the plan output above. If everything looks correct, proceed with the apply command.
 
    ```bash
-   terraform apply \
-     -var="tenant=<your-tenant-id>" \
-     -var="external_id=<external-id-from-deductive>" \
-     -var="region=<aws-region>" \
-     -var="aws_profile=<your-aws-profile>"
+   terraform apply -var="tenant=$TENANT" -var="region=$REGION" -var="external_id=$EXTERNAL_ID" -var="aws_profile=$AWS_PROFILE"
    ```
 
 3. **Share the output with Deductive AI**
