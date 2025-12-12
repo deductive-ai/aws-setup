@@ -31,4 +31,10 @@ go run backend-toggle.go "$PROJECT_ROOT/providers.tf" "$MODE"
 
 echo "Backend toggle complete."
 
-terraform init -migrate-state
+# Change back to project root before running terraform init
+cd "$PROJECT_ROOT"
+# first select default workspace to avoid "The currently selected workspace ($TENANT) does not exist."
+TF_WORKSPACE=default terraform init -migrate-state
+
+# Create workspace if it doesn't exist
+terraform workspace list | grep -q "$TENANT" 2>/dev/null || terraform workspace new "$TENANT"
