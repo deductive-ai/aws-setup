@@ -682,7 +682,9 @@ data "aws_iam_policy_document" "secrets_management_policy" {
       "secretsmanager:UntagResource",
       "secretsmanager:GetResourcePolicy",
       "secretsmanager:PutResourcePolicy",
-      "secretsmanager:DeleteSecret"
+      "secretsmanager:DeleteSecret",
+      # Required for managing version staging labels (AWSCURRENT/AWSPREVIOUS) during secret deletion
+      "secretsmanager:UpdateSecretVersionStage"
     ]
     resources = ["arn:aws:secretsmanager:*:${data.aws_caller_identity.current.account_id}:secret:deductiveai-*"]
     condition {
