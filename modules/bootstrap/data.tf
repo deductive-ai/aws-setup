@@ -554,7 +554,6 @@ data "aws_iam_policy_document" "deductive_policy" {
     ]
     resources = [
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:instance-profile/${var.tenant}_*",
-      # "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}EC2Role*",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*deductive*",
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*Deductive*"
     ]
