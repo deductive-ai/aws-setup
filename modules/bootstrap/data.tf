@@ -543,6 +543,23 @@ data "aws_iam_policy_document" "deductive_policy" {
     }
   }
 
+  # Instance profiles created by EKS/nodegroups may be tenant-prefixed and untagged.
+  # Allow profile-role detach/delete for those tenant-scoped profiles so destroy can complete.
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:AddRoleToInstanceProfile",
+      "iam:RemoveRoleFromInstanceProfile",
+      "iam:DeleteInstanceProfile",
+    ]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:instance-profile/${var.tenant}_*",
+      # "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}EC2Role*",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*deductive*",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*Deductive*"
+    ]
+  }
+
   # Enable WAF
   statement {
     effect = "Allow"
