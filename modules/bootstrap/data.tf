@@ -71,8 +71,9 @@ data "aws_iam_policy_document" "deductive_policy" {
       "acm:List*",
       # Secrets Manager cleanup Actions
       "secretsmanager:ListSecrets",
-      # Describe RDS
-      "rds:Describe*"
+      # Describe/List RDS
+      "rds:Describe*",
+      "rds:List*"
     ]
     resources = ["*"]
   }
