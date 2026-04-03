@@ -47,6 +47,8 @@ data "aws_iam_policy_document" "deductive_policy" {
       "ec2:Describe*",
       "ec2:Get*",
       "ec2:List*",
+      # PrivateLink cross-region connectivity
+      "vpce:AllowMultiRegion",
       # ELB Read-Only Actions
       "elasticloadbalancing:Describe*",
       # EKS Read-Only Actions
@@ -182,6 +184,7 @@ data "aws_iam_policy_document" "deductive_policy" {
       "ec2:CreateInternetGateway",
       "ec2:CreateNatGateway",
       "ec2:CreateVpc",
+      "ec2:CreateVpcEndpoint",
       "ec2:CreateVpcPeeringConnection",
       "ec2:CreateSecurityGroup",
       "ec2:CreateSubnet",
@@ -228,6 +231,7 @@ data "aws_iam_policy_document" "deductive_policy" {
       "ec2:CreateSecurityGroup",
       "ec2:CreateSubnet",
       "ec2:CreateRouteTable",
+      "ec2:CreateVpcEndpoint",
       # Required to terminate, reboot, stop and start instances
       "ec2:TerminateInstances",
       "ec2:RebootInstances",
