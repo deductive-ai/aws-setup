@@ -683,6 +683,18 @@ data "aws_iam_policy_document" "deductive_policy" {
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.resource_prefix}EC2Role*"
     ]
   }
+
+  # Required only when enabling Private DNS on a VPC Endpoint (PrivateLink feature).
+  # Without this permission, ModifyVpcEndpoint will fail with UnauthorizedOperation when
+  # private_dns_enabled = true is set on an aws:ec2:VpcEndpoint resource.
+  statement {
+    effect = "Allow"
+    actions = [
+      "route53:AssociateVPCWithHostedZone",
+      "route53:DisassociateVPCFromHostedZone"
+    ]
+    resources = ["*"]
+  }
 }
 
 # Define the secrets management policy document
