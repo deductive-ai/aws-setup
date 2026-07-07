@@ -18,12 +18,12 @@ variable "opensearch_aws_region" {
   description = "AWS region where the OpenSearch domain exists"
   type        = string
 }
-variable "trusted_account_id" {
+variable "deductive_account_id" {
   description = "AWS Account ID that contains the role"
   type        = string
   default     = "590183993904"
 }
-variable "trusted_cross_account_role_name" {
+variable "deductive_cross_account_role_name" {
   description = "Name of the role in the trusted account that needs access"
   type        = string
   default     = "DeductiveAIEC2Role"
@@ -46,7 +46,7 @@ resource "aws_iam_role" "opensearch_cross_account" {
       {
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::${var.trusted_account_id}:role/${var.trusted_cross_account_role_name}"
+          AWS = "arn:aws:iam::${var.deductive_account_id}:role/${var.deductive_cross_account_role_name}"
         }
         Action    = "sts:AssumeRole"
         Condition = {}
