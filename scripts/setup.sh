@@ -35,7 +35,18 @@ function install_common_tools_fedora() {
 }
 
 function install_common_tools_linux() {
-    curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+    local arch
+    arch="$(uname -m)"
+    case "$arch" in
+      x86_64) arch="amd64" ;;
+      aarch64|arm64) arch="arm64" ;;
+    esac
+    local tflint_tmp
+    tflint_tmp="$(mktemp -d)"
+    curl -fsSL -o "${tflint_tmp}/tflint.zip" "https://github.com/terraform-linters/tflint/releases/latest/download/tflint_linux_${arch}.zip"
+    unzip -q "${tflint_tmp}/tflint.zip" -d "${tflint_tmp}"
+    sudo install -m 0755 "${tflint_tmp}/tflint" /usr/local/bin/tflint
+    rm -rf "${tflint_tmp}"
 }
 
 function install_go_packages() {

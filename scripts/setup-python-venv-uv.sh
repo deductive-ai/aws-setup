@@ -32,7 +32,7 @@ echo "Working directory: $PROJECT_DIR"
 cd "$PROJECT_DIR"
 
 # Check if uv is installed or at expected version
-UV_VERSION="0.9.13"
+UV_VERSION="0.11.7"
 if ! command -v uv &>/dev/null || [ "$(uv --version | awk '{print $2}')" != "$UV_VERSION" ]; then
   if ! command -v uv &>/dev/null; then
     echo "uv not found. Installing uv..."
@@ -44,7 +44,7 @@ if ! command -v uv &>/dev/null || [ "$(uv --version | awk '{print $2}')" != "$UV
   export PATH="$HOME/.local/bin:$PATH"
 fi
 
-PYTHON_VERSION="3.13.9"
+PYTHON_VERSION="3.13.13"
 
 # Create virtual environment and install dependencies using uv
 # uv venv will automatically download Python if not available
