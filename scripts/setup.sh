@@ -36,7 +36,7 @@ function install_common_tools_fedora() {
 
 function install_go_packages() {
     go install github.com/aquasecurity/tfsec/cmd/tfsec@v1.28.14
-    go install github.com/terraform-linters/tflint@latest
+    go install github.com/terraform-linters/tflint@v0.66.0
 }
 
 if [ "$(uname)" = "Darwin" ]; then
