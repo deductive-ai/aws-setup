@@ -13,7 +13,7 @@ function brew_upsert() {
 
 function install_common_tools_mac() {
   echo "Setting up macOS tools..."
-  for package in terraform go tflint; do
+  for package in terraform go; do
     brew_upsert "$package"
   done
 }
@@ -34,18 +34,14 @@ function install_common_tools_fedora() {
     sudo dnf install -y terraform golang
 }
 
-function install_common_tools_linux() {
-    curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-}
-
 function install_go_packages() {
     go install github.com/aquasecurity/tfsec/cmd/tfsec@v1.28.14
+    go install github.com/terraform-linters/tflint@v0.66.0
 }
 
 if [ "$(uname)" = "Darwin" ]; then
   install_common_tools_mac
 else
-  install_common_tools_linux
   if [ -f /etc/os-release ]; then
     id=$(grep ^ID= /etc/os-release | sed 's/ID=//')
     case "$id" in
